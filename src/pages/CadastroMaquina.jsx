@@ -48,6 +48,27 @@ export default function CadastroMaquina() {
           </select>
         </div>
 
+        <div className="flex justify-between items-center">
+          <label className="font-semibold">
+            Digite a localização da máquina:
+          </label>
+          <input
+            type="text"
+            className="bg-gray-300 rounded px-4 py-2 w-72"
+          />
+        </div>
+
+        <div className="flex justify-between items-center">
+          <label className="font-semibold">
+            Selecione o status da máquina:
+          </label>
+          <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold">
+            <option>Ativa</option>
+            <option>Inativa</option>
+            <option>Em manutenção</option>
+          </select>
+        </div>
+
         <div className="flex justify-center">
           <button
             type="submit"

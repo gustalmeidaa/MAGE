@@ -1,12 +1,50 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function CadastroMaquina() {
+  const [funcionarios, setFuncionarios] = useState([]);
+
+  useEffect(() => {
+    const fetchFuncionarios = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/funcionarios");
+        setFuncionarios(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar funcionários:", error);
+      }
+    };
+
+    fetchFuncionarios();
+  }, []);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Impede o comportamento padrão de recarregar a página
+
+    const formData = {
+      codPatrimonial: event.target[0].value,
+      numSerie: event.target[1].value,
+      valor: event.target[2].value,
+      idResponsavel: event.target[3].value,
+      localizacao: event.target[4].value,
+      status: event.target[5].value,
+    };
+
+    try {
+      const response = await axios.post("http://localhost:8080/maquinas", formData);
+      console.log("Máquina cadastrada com sucesso:", response.data);
+      // *limpar o formulário ou mostrar uma mensagem de sucesso*
+    } catch (error) {
+      console.log(formData)
+      console.error("Erro ao cadastrar máquina:", error);
+    }
+  };
+
   return (
     <>
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-12">
         Cadastrar Máquina
       </h1>
-      <form className="max-w-2xl mx-auto space-y-8 text-lg">
+      <form className="max-w-2xl mx-auto space-y-8 text-lg" onSubmit={handleSubmit}>
         <div className="flex justify-between items-center">
           <label className="font-semibold">
             Digite o código de patrimônio da máquina:
@@ -14,6 +52,7 @@ export default function CadastroMaquina() {
           <input
             type="text"
             className="bg-gray-300 rounded px-4 py-2 w-72"
+            required
           />
         </div>
 
@@ -24,6 +63,7 @@ export default function CadastroMaquina() {
           <input
             type="text"
             className="bg-gray-300 rounded px-4 py-2 w-72"
+            required
           />
         </div>
 
@@ -34,6 +74,7 @@ export default function CadastroMaquina() {
           <input
             type="number"
             className="bg-gray-300 rounded px-4 py-2 w-72"
+            required
           />
         </div>
 
@@ -41,10 +82,13 @@ export default function CadastroMaquina() {
           <label className="font-semibold">
             Selecione o responsável pela máquina:
           </label>
-          <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold">
-            <option>Tito Fonfon</option>
-            <option>Maria Souza</option>
-            <option>Carlos Lima</option>
+          <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
+            <option value="">Selecione um responsável</option>
+            {funcionarios.map((funcionario) => (
+              <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
+                {funcionario.nomeFuncionario}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -55,6 +99,7 @@ export default function CadastroMaquina() {
           <input
             type="text"
             className="bg-gray-300 rounded px-4 py-2 w-72"
+            required
           />
         </div>
 
@@ -62,7 +107,7 @@ export default function CadastroMaquina() {
           <label className="font-semibold">
             Selecione o status da máquina:
           </label>
-          <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold">
+          <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
             <option>Ativa</option>
             <option>Inativa</option>
             <option>Em manutenção</option>
@@ -76,7 +121,7 @@ export default function CadastroMaquina() {
           >
             Cadastrar
           </button>
-        </div>
+          </div>
       </form>
     </>
   );

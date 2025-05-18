@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     const fetchStatusCounts = async () => {
       try {
-        const response = await fetch('http://localhost:8080/maquinas/status'); // Altere para o seu endpoint
+        const response = await fetch('http://localhost:8080/maquinas/status');
         if (!response.ok) {
           throw new Error('Erro ao buscar dados');
         }

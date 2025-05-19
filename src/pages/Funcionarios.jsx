@@ -1,21 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Funcionarios() {
-  const dados = [
-    { id: "001", nome: "Tito Fonfon", setor: "Recursos Humanos" },
-    { id: "002", nome: "Néia Pamonha", setor: "Financeiro" },
-    { id: "003", nome: "Zuleika Pipoca", setor: "Marketing" },
-    { id: "004", nome: "Juca Beludo", setor: "Jurídico" },
-    { id: "005", nome: "Mimosa Galvão", setor: "Logística" },
-    { id: "006", nome: "Toinho das Couves", setor: "Atendimento" },
-  ];
+  const [dados, setDados] = useState([]);
+  const [filtro, setFiltro] = useState({ id: "", nome: "" });
 
-  const [filtro, setFiltro] = useState({ id: "", nome: "", setor: "" });
+  // Fetch data from the API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/funcionarios");
+        const data = await response.json();
+        // Map the data to match the previous structure
+        const mappedData = data.map((funcionario) => ({
+          id: funcionario.idFuncionario.toString(), // Convert to string for consistency
+          nome: funcionario.nomeFuncionario,
+          setor: "", // Assuming setor is not provided in the new format
+        }));
+        setDados(mappedData);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filtrados = dados.filter((f) =>
     f.id.toLowerCase().includes(filtro.id.toLowerCase()) &&
-    f.nome.toLowerCase().includes(filtro.nome.toLowerCase()) &&
-    f.setor.toLowerCase().includes(filtro.setor.toLowerCase())
+    f.nome.toLowerCase().includes(filtro.nome.toLowerCase())
   );
 
   return (
@@ -40,13 +52,12 @@ export default function Funcionarios() {
           value={filtro.nome}
           onChange={(e) => setFiltro({ ...filtro, nome: e.target.value })}
         />
-        <input
-          type="text"
-          placeholder="Filtrar por Setor"
+        <button
+          onClick={() => setFiltro({ id: "", nome: "" })}
           className="border rounded px-3 py-1 text-sm"
-          value={filtro.setor}
-          onChange={(e) => setFiltro({ ...filtro, setor: e.target.value })}
-        />
+        >
+          Limpar Filtros
+        </button>
       </div>
 
       {/* Tabela */}
@@ -64,7 +75,7 @@ export default function Funcionarios() {
               <tr key={i} className="border-t text-sm">
                 <td className="py-2 px-4">{func.id}</td>
                 <td className="py-2 px-4">{func.nome}</td>
-                <td className="py-2 px-4">{func.setor}</td>
+                <td className="py-2 px-4">{func.setor || "N/A"}</td>
               </tr>
             ))}
             {filtrados.length === 0 && (

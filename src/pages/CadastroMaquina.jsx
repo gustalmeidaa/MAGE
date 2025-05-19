@@ -24,7 +24,7 @@ export default function CadastroMaquina() {
       codPatrimonial: event.target[0].value,
       numSerie: event.target[1].value,
       valor: event.target[2].value,
-      idResponsavel: event.target[3].value,
+      idResponsavel: event.target[3].value || null, // Permite que o responsável seja nulo
       localizacao: event.target[4].value,
       status: event.target[5].value,
     };
@@ -34,7 +34,7 @@ export default function CadastroMaquina() {
       console.log("Máquina cadastrada com sucesso:", response.data);
       // *limpar o formulário ou mostrar uma mensagem de sucesso*
     } catch (error) {
-      console.log(formData)
+      console.log(formData);
       console.error("Erro ao cadastrar máquina:", error);
     }
   };
@@ -82,8 +82,8 @@ export default function CadastroMaquina() {
           <label className="font-semibold">
             Selecione o responsável pela máquina:
           </label>
-          <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
-            <option value="">Selecione um responsável</option>
+          <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold">
+            <option value="">Nenhum responsável</option> {/* Nova opção */}
             {funcionarios.map((funcionario) => (
               <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
                 {funcionario.nomeFuncionario}
@@ -121,8 +121,9 @@ export default function CadastroMaquina() {
           >
             Cadastrar
           </button>
-          </div>
+        </div>
       </form>
     </>
   );
 }
+

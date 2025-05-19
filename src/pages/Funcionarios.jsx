@@ -39,7 +39,7 @@ export default function Funcionarios() {
       {/* Filtros */}
       <div className="flex gap-4 justify-center mb-6">
         <input
-          type="text"
+          type="number"
           placeholder="Filtrar por ID"
           className="border rounded px-3 py-1 text-sm"
           value={filtro.id}

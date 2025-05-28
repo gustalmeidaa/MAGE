@@ -94,7 +94,7 @@ export default function Home() {
                             <p><strong>Código Patrimonial:</strong> {maquina.codPatrimonial}</p>
                             <p><strong>Número de Série:</strong> {maquina.numSerie}</p>
                             <p><strong>Valor:</strong> {maquina.valor}</p>
-                            <p><strong>Responsável:</strong> {maquina.responsavel || "Não especificado"}</p>
+                            <p><strong>Responsável:</strong> {maquina.responsavel.nomeFuncionario || "Não especificado"}</p>
                             <p><strong>Localização:</strong> {maquina.localizacao}</p>
                             <p><strong>Status:</strong> {maquina.status}</p>
                         </div>

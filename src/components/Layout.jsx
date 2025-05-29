@@ -16,6 +16,7 @@ export default function Layout() {
           <a href="/busca" className="text-white">Busca</a>
           <a href="/manutencoes" className="text-white">Manutenções</a>
           <a href="/movimentacoes" className="text-white">Movimentações</a>
+          <a href="/setores" className="text-white">Setores</a>
         </nav>
       </aside>
 

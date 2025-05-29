@@ -58,7 +58,7 @@ export default function Home() {
               <span className="text-gray-500">{statusCounts.inativas}</span>
             </div>
             <div className="flex items-center">
-              <div className="w-6 h-6 rounded-full bg-orange-400 mr-4"></div>
+              <div className="w-6 h-6 rounded-full bg-yellow-500 mr-4"></div>
               <span className="text-gray-700 flex-1">Em manutenção</span>
               <span className="text-gray-500">{statusCounts.emManutencao}</span>
             </div>

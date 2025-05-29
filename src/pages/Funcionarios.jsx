@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function Funcionarios() {
   const [dados, setDados] = useState([]);
@@ -36,10 +37,16 @@ export default function Funcionarios() {
         Lista de Funcionários
       </h1>
 
+        <div className="mt-10 flex justify-center">
+          <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
+            <Link to="/cadastrar-funcionario">Cadastrar Funcionário</Link>
+          </button>
+        </div>
+      <br />
       {/* Filtros */}
       <div className="flex gap-4 justify-center mb-6">
         <input
-          type="text"
+          type="number"
           placeholder="Filtrar por ID"
           className="border rounded px-3 py-1 text-sm"
           value={filtro.id}

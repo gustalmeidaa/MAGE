@@ -11,6 +11,7 @@ import CadastroFuncionario from "./pages/CadastroFuncionario"
 import Movimentacoes from "./pages/Movimentacoes"
 import Manutencoes from "./pages/Manutencoes"
 import Login from "./pages/Login"
+import Setor from "./pages/Setor"
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="cadastrar-funcionario" element={<CadastroFuncionario />} />       
           <Route path="movimentacoes" element={<Movimentacoes />} />       
           <Route path="manutencoes" element={<Manutencoes />} />       
+          <Route path="setores" element={<Setor />} />     
         </Route>
         <Route path="login" element={<Login />} /> 
       </Routes>

@@ -13,10 +13,10 @@ export default function Home() {
         // Define a URL com base no tipo de busca selecionado
         switch (searchType) {
             case 'Patrimônio':
-                url = `http://localhost:8080/maquinas/buscar/cod-patrimonial/${searchValue}`;
+                url = `http://localhost:8081/maquinas/buscar/cod-patrimonial/${searchValue}`;
                 break;
             case 'Número de série':
-                url = `http://localhost:8080/maquinas/buscar/num-serie/${searchValue}`;
+                url = `http://localhost:8081/maquinas/buscar/num-serie/${searchValue}`;
                 break;
             default:
                 return;

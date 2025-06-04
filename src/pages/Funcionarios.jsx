@@ -9,7 +9,7 @@ export default function Funcionarios() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8080/funcionarios");
+        const response = await fetch("http://localhost:8081/funcionarios");
         const data = await response.json();
         // Map the data to match the previous structure
         const mappedData = data.map((funcionario) => ({

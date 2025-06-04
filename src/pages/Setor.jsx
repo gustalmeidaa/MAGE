@@ -12,7 +12,7 @@ export default function Setor() {
   useEffect(() => {
     const fetchSetor = async () => {
       try {
-        const response = await fetch("http://localhost:8080/setor");
+        const response = await fetch("http://localhost:8081/setor");
         const data = await response.json();
         setSetor(data);
       } catch (error) {

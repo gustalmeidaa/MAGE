@@ -7,7 +7,7 @@ export default function CadastroMaquina() {
   useEffect(() => {
     const fetchFuncionarios = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/funcionarios");
+        const response = await axios.get("http://localhost:8081/funcionarios");
         setFuncionarios(response.data);
       } catch (error) {
         console.error("Erro ao buscar funcionários:", error);
@@ -30,7 +30,7 @@ export default function CadastroMaquina() {
     };
 
     try {
-      const response = await axios.post("http://localhost:8080/maquinas", formData);
+      const response = await axios.post("http://localhost:8081/maquinas", formData);
       console.log("Máquina cadastrada com sucesso:", response.data);
       // *limpar o formulário ou mostrar uma mensagem de sucesso*
     } catch (error) {

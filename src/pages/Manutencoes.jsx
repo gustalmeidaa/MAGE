@@ -15,7 +15,7 @@ export default function Movimentacoes() {
   useEffect(() => {
     const fetchMovimentacoes = async () => {
       try {
-        const response = await fetch("http://localhost:8081/manutencoes");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/manutencoes`);
         const data = await response.json();
         setMovimentacoes(data);
       } catch (error) {
@@ -104,7 +104,7 @@ export default function Movimentacoes() {
               <th className="py-2 px-4">Tipo de Manutenção</th>
               <th className="py-2 px-4">O que foi feito</th>
               <th className="py-2 px-4">ID da Máquina</th>
-              <th className="py-2 px-4">ID do Responsável</th>
+              <th className="py-2 px-4">Responsável</th>
             </tr>
           </thead>
           <tbody>
@@ -116,7 +116,7 @@ export default function Movimentacoes() {
                   <td className="py-2 px-4">{mov.tipoManutencao}</td>
                   <td className="py-2 px-4">{mov.procedimentos}</td>
                   <td className="py-2 px-4">{mov.idMaquina.idMaquina}</td>
-                  <td className="py-2 px-4">{mov.idFuncionario.idFuncionario}</td>
+                  <td className="py-2 px-4">{mov.idFuncionario.nomeFuncionario}</td>
                 </tr>
               ))
             ) : (

@@ -12,7 +12,7 @@ export default function Setor() {
   useEffect(() => {
     const fetchSetor = async () => {
       try {
-        const response = await fetch("http://localhost:8081/setor");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/setores`);
         const data = await response.json();
         setSetor(data);
       } catch (error) {
@@ -25,8 +25,8 @@ export default function Setor() {
 
   const filtrados = setor.filter((set) => {
     return (
-      (filtro.id_setor ? set.id_setor.toString().includes(filtro.id_setor) : true) &&
-      (filtro.nome_setor ? set.nome_setor.toLowerCase().includes(filtro.nome_setor.toLowerCase()) : true)
+      (filtro.idSetor ? set.id_setor.toString().includes(filtro.idSetor) : true) &&
+      (filtro.nomeSetor ? set.nome_setor.toLowerCase().includes(filtro.nomeSetor.toLowerCase()) : true)
     );
   });
 
@@ -38,7 +38,7 @@ export default function Setor() {
 
       <div className="mt-10 flex justify-center">
         <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
-          <Link to="/registrar-setor">Registrar Setor</Link>
+          <Link to="/cadastrar-setor">Cadastrar Setor</Link>
         </button>
       </div>
       <br />
@@ -48,15 +48,15 @@ export default function Setor() {
           type="number"
           placeholder="Filtrar por ID"
           className="border rounded px-3 py-1 text-sm"
-          value={filtro.id_setor}
-          onChange={(e) => setFiltro({ ...filtro, id_setor: e.target.value })}
+          value={filtro.idSetor}
+          onChange={(e) => setFiltro({ ...filtro, idSetor: e.target.value })}
         />
         <input
           type="text"
           placeholder="Filtrar por Nome do Setor"
           className="border rounded px-3 py-1 text-sm"
-          value={filtro.nome_setor}
-          onChange={(e) => setFiltro({ ...filtro, nome_setor: e.target.value })}
+          value={filtro.nomeSetor}
+          onChange={(e) => setFiltro({ ...filtro, nomeSetor: e.target.value })}
         />
 
         <button
@@ -80,8 +80,8 @@ export default function Setor() {
             {filtrados.length > 0 ? (
               filtrados.map((set, index) => (
                 <tr key={index} className="border-t text-sm">
-                  <td className="py-2 px-4">{set.id_setor}</td>
-                  <td className="py-2 px-4">{set.nome_setor}</td>
+                  <td className="py-2 px-4">{set.idSetor}</td>
+                  <td className="py-2 px-4">{set.nomeSetor}</td>
                 </tr>
               ))
             ) : (

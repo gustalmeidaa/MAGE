@@ -5,13 +5,14 @@ import Home from "./pages/Home";
 import CadastroMaquina from "./pages/CadastroMaquina";
 import Busca from "./pages/Busca";
 import Funcionarios from "./pages/Funcionarios";
-import RegistrarMovimentacao from "./pages/RegistarMovimentacao";
+import RegistrarMovimentacao from "./pages/RegistrarMovimentacao";
 import RegistrarManutencao from "./pages/RegistrarManutencao";
 import CadastroFuncionario from "./pages/CadastroFuncionario"
 import Movimentacoes from "./pages/Movimentacoes"
 import Manutencoes from "./pages/Manutencoes"
 import Login from "./pages/Login"
 import Setor from "./pages/Setor"
+import CadastroSetor from "./pages/CadastroSetor"
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="movimentacoes" element={<Movimentacoes />} />       
           <Route path="manutencoes" element={<Manutencoes />} />       
           <Route path="setores" element={<Setor />} />     
+          <Route path="cadastrar-setor" element={<Setor />} />     
         </Route>
         <Route path="login" element={<Login />} /> 
       </Routes>

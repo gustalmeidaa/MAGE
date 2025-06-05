@@ -9,13 +9,13 @@ export default function Funcionarios() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8081/funcionarios");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/funcionarios`);
         const data = await response.json();
         // Map the data to match the previous structure
         const mappedData = data.map((funcionario) => ({
           id: funcionario.idFuncionario.toString(), // Convert to string for consistency
           nome: funcionario.nomeFuncionario,
-          setor: "", // Assuming setor is not provided in the new format
+          setor: funcionario.setor.nomeSetor
         }));
         setDados(mappedData);
       } catch (error) {

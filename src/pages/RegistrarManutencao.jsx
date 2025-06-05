@@ -9,8 +9,8 @@ export default function RegistrarManutencao() {
     const fetchData = async () => {
       try {
         const [resMaquinas, resFuncionarios] = await Promise.all([
-          axios.get("http://localhost:8081/maquinas"),
-          axios.get("http://localhost:8081/funcionarios"),
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/maquinas`),
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/funcionarios`),
         ]);
         setMaquinas(resMaquinas.data);
         setFuncionarios(resFuncionarios.data);
@@ -29,17 +29,17 @@ export default function RegistrarManutencao() {
 
 
   const formData = {
-    
+    data: form[0].value,
     idMaquina: form[1].value,    
     idFuncionario: form[2].value,   
-    tipoManutencao: form[4].value,                 
-    procedimentos: form[5].value,            
+    tipoManutencao: form[3].value,                 
+    procedimentos: form[4].value,            
  
   };
 
 
     try {
-      await axios.post("http://localhost:8081/manutencoes", formData);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/manutencoes`, formData);
       alert("Manutenção registrada com sucesso!");
       form.reset();
     } catch (error) {
@@ -59,7 +59,7 @@ export default function RegistrarManutencao() {
           <label className="font-semibold">Data da manutenção:</label>
           <input
             className="bg-gray-300 rounded px-4 py-2 w-72"
-            type="date"
+            type="datetime-local"
             id="data"
             name="data"
             required

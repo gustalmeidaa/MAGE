@@ -42,6 +42,7 @@ export default function CadastroFuncionario() {
         formData
       );
       console.log("Funcionário cadastrado com sucesso:", response.data);
+      alert("Funcionário cadastrado com sucesso!")
       event.target.reset();
     } catch (error) {
       console.error("Erro ao cadastrar funcionário:", error);
@@ -85,18 +86,6 @@ export default function CadastroFuncionario() {
           </button>
         </div>
       </form>
-
-      {/* Listagem opcional */}
-      <div className="mt-12 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-4">Funcionários cadastrados</h2>
-        <ul className="list-disc list-inside">
-          {funcionarios.map((func) => (
-            <li key={func.id_funcionario}>
-              {func.nomeFuncionario} — Setor: {func.setor?.nomeSetor || "Não informado"}
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }

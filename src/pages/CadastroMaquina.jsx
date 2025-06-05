@@ -32,6 +32,8 @@ export default function CadastroMaquina() {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/maquinas`, formData);
       console.log("Máquina cadastrada com sucesso:", response.data);
+      alert("Máquina cadastrada com sucesso:");
+      event.target.reset();
       // *limpar o formulário ou mostrar uma mensagem de sucesso*
     } catch (error) {
       console.log(formData);

@@ -27,6 +27,8 @@ export default function CadastroSetor() {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/setores`, formData);
       console.log("Setor cadastrado com sucesso:", response.data);
+      alert("Setor cadastrado com sucesso:", response.data);
+      event.target[0].value = ""
       // *limpar o formulário ou mostrar uma mensagem de sucesso*
     } catch (error) {
       console.log(formData);

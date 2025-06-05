@@ -74,7 +74,7 @@ export default function RegistrarMovimentacao() {
           >
             <option value="">Selecione uma máquina</option>
             {maquinas.map((maq) => (
-              <option key={maq.idMaquina} value={maq.idMaquina}>
+              <option key={maq.codPatrimonial.idMaquina} value={maq.codPatrimonial.idMaquina}>
                 {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
               </option>
             ))}

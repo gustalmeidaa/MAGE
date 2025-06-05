@@ -29,7 +29,7 @@ export default function App() {
           <Route path="movimentacoes" element={<Movimentacoes />} />       
           <Route path="manutencoes" element={<Manutencoes />} />       
           <Route path="setores" element={<Setor />} />     
-          <Route path="cadastrar-setor" element={<Setor />} />     
+          <Route path="cadastrar-setor" element={<CadastroSetor />} />     
         </Route>
         <Route path="login" element={<Login />} /> 
       </Routes>

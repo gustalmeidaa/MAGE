@@ -41,6 +41,7 @@ export default function RegistrarManutencao() {
     try {
       await axios.post(`${import.meta.env.VITE_API_BASE_URL}/manutencoes`, formData);
       alert("Manutenção registrada com sucesso!");
+      location.reload(true)
       form.reset();
     } catch (error) {
       console.error("Erro ao registrar manutenção:", error);

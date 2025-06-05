@@ -8,7 +8,7 @@ export default function CadastroFuncionario() {
   useEffect(() => {
     const fetchFuncionarios = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/funcionarios");
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/funcionarios`);
         setFuncionarios(response.data);
       } catch (error) {
         console.error("Erro ao buscar funcionários:", error);
@@ -17,7 +17,7 @@ export default function CadastroFuncionario() {
 
     const fetchSetores = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/setores");
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/setores`);
         setSetores(response.data);
       } catch (error) {
         console.error("Erro ao buscar setores:", error);
@@ -32,13 +32,13 @@ export default function CadastroFuncionario() {
     event.preventDefault();
 
     const formData = {
-      nome_funcionario: event.target[0].value,
-      id_setor: event.target[1].value || null,
+      nomeFuncionario: event.target[0].value,
+      nomeSetor: event.target[1].value || null,
     };
 
     try {
       const response = await axios.post(
-        "http://localhost:8081/funcionarios",
+        `${import.meta.env.VITE_API_BASE_URL}/funcionarios`,
         formData
       );
       console.log("Funcionário cadastrado com sucesso:", response.data);
@@ -69,8 +69,8 @@ export default function CadastroFuncionario() {
           <select className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
             <option value="">Nenhum setor selecionado</option>
             {setores.map((setor) => (
-              <option key={setor.id_setor} value={setor.id_setor}>
-                {setor.nome}
+              <option key={setor.nomeSetor} value={setor.nomeSetor}>
+                {setor.nomeSetor}
               </option>
             ))}
           </select>
@@ -92,7 +92,7 @@ export default function CadastroFuncionario() {
         <ul className="list-disc list-inside">
           {funcionarios.map((func) => (
             <li key={func.id_funcionario}>
-              {func.nome_funcionario} — Setor: {func.setor?.nome || "Não informado"}
+              {func.nomeFuncionario} — Setor: {func.setor?.nomeSetor || "Não informado"}
             </li>
           ))}
         </ul>

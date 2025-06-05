@@ -13,10 +13,10 @@ export default function Home() {
         // Define a URL com base no tipo de busca selecionado
         switch (searchType) {
             case 'Patrimônio':
-                url = `http://localhost:8081/maquinas/buscar/cod-patrimonial/${searchValue}`;
+                url = `${import.meta.env.VITE_API_BASE_URL}/maquinas/buscar/cod-patrimonial/${searchValue}`;
                 break;
             case 'Número de série':
-                url = `http://localhost:8081/maquinas/buscar/num-serie/${searchValue}`;
+                url = `${import.meta.env.VITE_API_BASE_URL}/maquinas/buscar/num-serie/${searchValue}`;
                 break;
             default:
                 return;
@@ -94,7 +94,7 @@ export default function Home() {
                             <p><strong>Código Patrimonial:</strong> {maquina.codPatrimonial}</p>
                             <p><strong>Número de Série:</strong> {maquina.numSerie}</p>
                             <p><strong>Valor:</strong> {maquina.valor}</p>
-                            <p><strong>Responsável:</strong> {maquina.responsavel.nomeFuncionario || "Não especificado"}</p>
+                            <p><strong>Responsável:</strong> {maquina.idResponsavel || "Não especificado"}</p>
                             <p><strong>Localização:</strong> {maquina.localizacao}</p>
                             <p><strong>Status:</strong> {maquina.status}</p>
                         </div>

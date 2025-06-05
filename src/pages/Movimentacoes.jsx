@@ -16,7 +16,7 @@ export default function Movimentacoes() {
   useEffect(() => {
     const fetchMovimentacoes = async () => {
       try {
-        const response = await fetch("http://localhost:8081/movimentacoes");
+        const response = await fetch("http://localhost:8080/movimentacoes");
         const data = await response.json();
         setMovimentacoes(data);
       } catch (error) {

@@ -2,9 +2,8 @@
   "name": "mage",
   "private": true,
   "version": "0.0.0",
-  "proxy": "http://3.138.196.240:8080",
   "scripts": {
-    "dev": "vite --port 8080",
+    "dev": "vite --port 8081",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

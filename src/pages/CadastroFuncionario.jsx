@@ -4,6 +4,7 @@ import axios from "axios";
 export default function CadastroFuncionario() {
   const [funcionarios, setFuncionarios] = useState([]);
   const [setores, setSetores] = useState([]);
+  const [sucesso, setSucesso] = useState(null); // mensagem de sucesso
 
   useEffect(() => {
     const fetchFuncionarios = async () => {
@@ -41,9 +42,10 @@ export default function CadastroFuncionario() {
         `${import.meta.env.VITE_API_BASE_URL}/funcionarios`,
         formData
       );
-      console.log("Funcionário cadastrado com sucesso:", response.data);
-      alert("Funcionário cadastrado com sucesso!")
+      setSucesso("Funcionário cadastrado com sucesso!");
       event.target.reset();
+
+      setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao cadastrar funcionário:", error);
     }
@@ -54,6 +56,13 @@ export default function CadastroFuncionario() {
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-12">
         Cadastrar Funcionário
       </h1>
+
+      {/* Cartão de sucesso */}
+      {sucesso && (
+        <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
+          {sucesso}
+        </div>
+      )}
 
       <form className="max-w-2xl mx-auto space-y-8 text-lg" onSubmit={handleSubmit}>
         <div className="flex justify-between items-center">
@@ -86,6 +95,17 @@ export default function CadastroFuncionario() {
           </button>
         </div>
       </form>
+
+      {/* Animação CSS para fade in */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease forwards;
+        }
+      `}</style>
     </div>
   );
 }

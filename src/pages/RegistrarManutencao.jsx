@@ -4,6 +4,7 @@ import axios from "axios";
 export default function RegistrarManutencao() {
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
+  const [sucesso, setSucesso] = useState(null); // mensagem de sucesso
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,22 +28,20 @@ export default function RegistrarManutencao() {
 
     const form = event.target;
 
-
-  const formData = {
-    data: form[0].value,
-    idMaquina: form[1].value,    
-    idFuncionario: form[2].value,   
-    tipoManutencao: form[3].value,                 
-    procedimentos: form[4].value,            
- 
-  };
-
+    const formData = {
+      data: form[0].value,
+      idMaquina: form[1].value,
+      idFuncionario: form[2].value,
+      tipoManutencao: form[3].value,
+      procedimentos: form[4].value,
+    };
 
     try {
       await axios.post(`${import.meta.env.VITE_API_BASE_URL}/manutencoes`, formData);
-      alert("Manutenção registrada com sucesso!");
-      location.reload(true)
+      setSucesso("Manutenção registrada com sucesso!");
       form.reset();
+
+      setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao registrar manutenção:", error);
     }
@@ -53,6 +52,13 @@ export default function RegistrarManutencao() {
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-12">
         Registrar Manutenção
       </h1>
+
+      {/* Cartão de sucesso */}
+      {sucesso && (
+        <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
+          {sucesso}
+        </div>
+      )}
 
       <form className="max-w-2xl mx-auto space-y-8 text-lg" onSubmit={handleSubmit}>
         {/* Campo de data */}
@@ -123,6 +129,17 @@ export default function RegistrarManutencao() {
           </button>
         </div>
       </form>
+
+      {/* Animação CSS para fade in */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease forwards;
+        }
+      `}</style>
     </div>
   );
 }

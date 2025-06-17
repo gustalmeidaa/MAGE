@@ -4,6 +4,7 @@ import axios from "axios";
 export default function RegistrarMovimentacao() {
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
+  const [sucesso, setSucesso] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,16 +30,20 @@ export default function RegistrarMovimentacao() {
     const form = event.target;
 
     const formData = {
+      dataMovimentacao: form[0].value,
       idMaquinaMovimentada: form[1].value,
+      idResponsavel: form[2].value || null,
       tipo: form[3].value,
-      origem: form[4].value,
-      destino: form[5].value,
+      origem: form[4].value || null,
+      destino: form[5].value || null,
     };
 
     try {
       await axios.post(`${import.meta.env.VITE_API_BASE_URL}/movimentacoes`, formData);
-      alert("Movimentação registrada com sucesso!");
+      setSucesso("Movimentação registrada com sucesso!");
       form.reset();
+
+      setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao registrar movimentação:", error);
     }
@@ -49,6 +54,13 @@ export default function RegistrarMovimentacao() {
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-12">
         Registrar Movimentação
       </h1>
+
+      {/* Notificação de sucesso */}
+      {sucesso && (
+        <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
+          {sucesso}
+        </div>
+      )}
 
       <form
         className="max-w-2xl mx-auto space-y-8 text-lg"
@@ -74,7 +86,7 @@ export default function RegistrarMovimentacao() {
           >
             <option value="">Selecione uma máquina</option>
             {maquinas.map((maq) => (
-              <option key={maq.codPatrimonial.idMaquina} value={maq.codPatrimonial.idMaquina}>
+              <option key={maq.idMaquina} value={maq.idMaquina}>
                 {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
               </option>
             ))}
@@ -153,6 +165,17 @@ export default function RegistrarMovimentacao() {
           </button>
         </div>
       </form>
+
+      {/* Animação CSS para fade in */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease forwards;
+        }
+      `}</style>
     </div>
   );
 }

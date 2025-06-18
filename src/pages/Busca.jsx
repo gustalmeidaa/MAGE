@@ -132,7 +132,6 @@ export default function Maquinas() {
                     currency: "BRL",
                   })}
                 </td>
-                <td className="py-2 px-4">{m.status}</td>
                 <td className="py-2 px-4">{m.idResponsavel}</td>
               </tr>
             ))}

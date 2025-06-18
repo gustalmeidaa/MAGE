@@ -93,7 +93,7 @@ export default function RegistrarManutencao() {
             <option value="">Nenhum responsável</option>
             {funcionarios.map((f) => (
               <option key={f.idFuncionario} value={f.idFuncionario}>
-                {f.nomeFuncionario}
+                {f.nomeFuncionario} - ID: {f.idFuncionario}
               </option>
             ))}
           </select>

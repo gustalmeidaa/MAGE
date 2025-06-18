@@ -103,7 +103,7 @@ export default function CadastroMaquina() {
             <option value="">Nenhum responsável</option>
             {funcionarios.map((funcionario) => (
               <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
-                {funcionario.nomeFuncionario}
+                {funcionario.nomeFuncionario} - ID: {funcionario.idFuncionario}
               </option>
             ))}
           </select>

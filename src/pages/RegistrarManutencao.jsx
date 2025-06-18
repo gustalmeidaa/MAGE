@@ -79,7 +79,7 @@ export default function RegistrarManutencao() {
           <select name="maquina" className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
             <option value="">Nenhuma máquina</option>
             {maquinas.map((maq) => (
-              <option key={maq.idMaquina} value={maq.idMaquina}>
+              <option key={`maquina-${maq.idMaquina}`} value={maq.idMaquina}>
                 {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
               </option>
             ))}
@@ -92,12 +92,13 @@ export default function RegistrarManutencao() {
           <select name="responsavel" className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
             <option value="">Nenhum responsável</option>
             {funcionarios.map((f) => (
-              <option key={f.idFuncionario} value={f.idFuncionario}>
+              <option key={`funcionario-${f.idFuncionario}`} value={f.idFuncionario}>
                 {f.nomeFuncionario} - ID: {f.idFuncionario}
               </option>
             ))}
           </select>
         </div>
+
 
         {/* Tipo de manutenção */}
         <div className="flex justify-between items-center">

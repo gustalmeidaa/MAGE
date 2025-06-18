@@ -80,33 +80,33 @@ export default function RegistrarMovimentacao() {
         <div className="flex justify-between items-center">
           <label className="font-semibold">Máquina movimentada:</label>
           <select
-            name="maquina"
-            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
-            required
-          >
-            <option value="">Selecione uma máquina</option>
-            {maquinas.map((maq) => (
-              <option key={maq.idMaquina} value={maq.idMaquina}>
-                {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
-              </option>
-            ))}
-          </select>
+  name="maquina"
+  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+  required
+>
+  <option value="">Selecione uma máquina</option>
+  {maquinas.map((maq) => (
+    <option key={maq.idMaquina} value={maq.idMaquina}>
+      {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
+    </option>
+  ))}
+</select>
         </div>
 
         {/* Responsável */}
         <div className="flex justify-between items-center">
           <label className="font-semibold">Responsável:</label>
           <select
-            name="responsavel"
-            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
-          >
-            <option value="">Nenhum responsável</option>
-            {funcionarios.map((funcionario) => (
-              <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
-                {funcionario.nomeFuncionario} - ID: {funcionario.idFuncionario}
-              </option>
-            ))}
-          </select>
+  name="responsavel"
+  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+>
+  <option value="">Nenhum responsável</option>
+  {funcionarios.map((funcionario) => (
+    <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
+      {funcionario.nomeFuncionario} - ID: {funcionario.idFuncionario}
+    </option>
+  ))}
+</select>
         </div>
 
         {/* Tipo de movimentação */}
@@ -127,32 +127,32 @@ export default function RegistrarMovimentacao() {
         <div className="flex justify-between items-center">
           <label className="font-semibold">Origem:</label>
           <select
-            name="origem"
-            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
-          >
-            <option value="">Nenhuma origem</option>
-            {maquinas.map((maq) => (
-              <option key={maq.idMaquina} value={maq.localizacao}>
-                {maq.localizacao}
-              </option>
-            ))}
-          </select>
+  name="origem"
+  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+>
+  <option value="">Nenhuma origem</option>
+  {maquinas.map((maq) => (
+    <option key={maq.idMaquina} value={maq.localizacao}>
+      {maq.localizacao}
+    </option>
+  ))}
+</select>
         </div>
 
         {/* Destino */}
         <div className="flex justify-between items-center">
           <label className="font-semibold">Destino:</label>
           <select
-            name="destino"
-            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
-          >
-            <option value="">Nenhum destino</option>
-            {maquinas.map((maq) => (
-              <option key={maq.idMaquina} value={maq.localizacao}>
-                {maq.localizacao}
-              </option>
-            ))}
-          </select>
+  name="destino"
+  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+>
+  <option value="">Nenhum destino</option>
+  {maquinas.map((maq) => (
+    <option key={maq.idMaquina} value={maq.localizacao}>
+      {maq.localizacao}
+    </option>
+  ))}
+</select>
         </div>
 
         {/* Botão */}

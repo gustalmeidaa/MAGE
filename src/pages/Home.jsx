@@ -31,17 +31,17 @@ export default function Home() {
     fetchStatusCounts();
   }, []);
 
-  const total =
-    statusCounts.ativas + statusCounts.inativas + statusCounts.emManutencao;
-
-  // Função que retorna altura da barra, no mínimo 10px pra ficar visível
+  // Função para calcular altura da barra
   const getBarHeight = (count) => {
-    if (total === 0) return "10px"; // Sem dados, mostra barra mínima
-    const alturaPercent = (count / total) * 100;
-    // Converte percent para px baseado na altura do container (256px = h-64)
-    // Vamos limitar mínimo 10px
-    const alturaPx = Math.max((alturaPercent / 100) * 256, 10);
-    return `${alturaPx}px`;
+    const maxCount = Math.max(
+      statusCounts.ativas,
+      statusCounts.inativas,
+      statusCounts.emManutencao,
+      1 // Evita divisão por zero
+    );
+    const maxHeight = 256; // Altura máxima (igual a h-64)
+    const altura = (count / maxCount) * maxHeight;
+    return `${Math.max(altura, 10)}px`; // Altura mínima 10px
   };
 
   return (
@@ -51,41 +51,24 @@ export default function Home() {
         <p className="text-gray-400 mt-2">Status geral das máquinas</p>
 
         {/* Gráfico */}
-        <div className="flex items-end justify-center gap-16 mt-10 h-64 bg-blue-50 rounded-xl p-6 shadow-md">
-          {/* Ativas */}
-          <div className="flex flex-col items-center">
-            <div
-              className="bg-green-500 w-16 rounded-t"
-              style={{ height: getBarHeight(statusCounts.ativas) }}
-              title={`${statusCounts.ativas} máquinas ativas`}
-            />
-            <span className="mt-3 text-gray-700 font-semibold">Ativas</span>
-            <span className="text-sm text-gray-500">{statusCounts.ativas}</span>
-          </div>
-
-          {/* Inativas */}
-          <div className="flex flex-col items-center">
-            <div
-              className="bg-red-500 w-16 rounded-t"
-              style={{ height: getBarHeight(statusCounts.inativas) }}
-              title={`${statusCounts.inativas} máquinas inativas`}
-            />
-            <span className="mt-3 text-gray-700 font-semibold">Inativas</span>
-            <span className="text-sm text-gray-500">{statusCounts.inativas}</span>
-          </div>
-
-          {/* Em manutenção */}
-          <div className="flex flex-col items-center">
-            <div
-              className="bg-yellow-500 w-16 rounded-t"
-              style={{ height: getBarHeight(statusCounts.emManutencao) }}
-              title={`${statusCounts.emManutencao} máquinas em manutenção`}
-            />
-            <span className="mt-3 text-gray-700 font-semibold">Manutenção</span>
-            <span className="text-sm text-gray-500">
-              {statusCounts.emManutencao}
-            </span>
-          </div>
+        <div className="flex justify-center gap-16 mt-10 bg-blue-50 rounded-xl p-6 shadow-md">
+          {[
+            { label: "Ativas", color: "bg-green-500", count: statusCounts.ativas },
+            { label: "Inativas", color: "bg-red-500", count: statusCounts.inativas },
+            { label: "Manutenção", color: "bg-yellow-500", count: statusCounts.emManutencao },
+          ].map((item) => (
+            <div key={item.label} className="flex flex-col items-center">
+              <div className="flex items-end h-64">
+                <div
+                  className={`${item.color} w-16 rounded-t`}
+                  style={{ height: getBarHeight(item.count) }}
+                  title={`${item.count} máquinas ${item.label.toLowerCase()}`}
+                ></div>
+              </div>
+              <span className="mt-3 text-gray-700 font-semibold">{item.label}</span>
+              <span className="text-sm text-gray-500">{item.count}</span>
+            </div>
+          ))}
         </div>
 
         {/* Totais */}
@@ -110,14 +93,20 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Botão */}
-        <div className="mt-10">
-          <Link to="/cadastrar-maquina">
-            <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
-              Cadastrar Máquina
-            </button>
-          </Link>
-        </div>
+    {/* Botões */}
+    <div className="mt-10 flex justify-center gap-6">
+      <Link to="/cadastrar-maquina">
+        <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
+          Cadastrar Máquina
+        </button>
+      </Link>
+      <Link to="/busca">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-lg">
+          Buscar Máquina
+        </button>
+      </Link>
+    </div>
+
       </main>
     </div>
   );

@@ -13,7 +13,6 @@ export default function Layout() {
         <nav className="flex flex-col space-y-4 w-full">
           <a href="/" className="text-white">Máquinas</a>
           <a href="/funcionarios" className="text-white">Funcionários</a>
-          <a href="/busca" className="text-white">Busca</a>
           <a href="/manutencoes" className="text-white">Manutenções</a>
           <a href="/movimentacoes" className="text-white">Movimentações</a>
           <a href="/setores" className="text-white">Setores</a>

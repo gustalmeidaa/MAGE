@@ -30,7 +30,7 @@ export default function RegistrarMovimentacao() {
     const form = event.target;
 
     const formData = {
-      dataMovimentacao: form[0].value,
+      data: form[0].value,
       idMaquinaMovimentada: form[1].value,
       idResponsavel: form[2].value || null,
       tipo: form[3].value,
@@ -71,7 +71,7 @@ export default function RegistrarMovimentacao() {
           <label className="font-semibold">Data da movimentação:</label>
           <input
             className="bg-gray-300 rounded px-4 py-2 w-72"
-            type="date"
+            type="datetime-local"
             required
           />
         </div>

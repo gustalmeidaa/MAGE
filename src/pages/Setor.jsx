@@ -77,16 +77,15 @@ export default function Setor() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.length > 0 ? (
-              filtrados.map((set, index) => (
-                <tr key={index} className="border-t text-sm">
-                  <td className="py-2 px-4">{set.idSetor}</td>
-                  <td className="py-2 px-4">{set.nomeSetor}</td>
-                </tr>
-              ))
-            ) : (
+            {filtrados.map((set, i) => (
+              <tr key={i} className="border-t text-sm">
+                <td className="py-2 px-4">{set.idSetor}</td>
+                <td className="py-2 px-4">{set.nomeSetor}</td>
+              </tr>
+            ))}
+            {filtrados.length === 0 && (
               <tr>
-                <td colSpan="6" className="text-center py-4 text-gray-500">
+                <td colSpan="3" className="text-center py-4 text-gray-500">
                   Nenhum setor encontrado.
                 </td>
               </tr>

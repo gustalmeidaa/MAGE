@@ -125,13 +125,13 @@ export default function Maquinas() {
                 <td className="py-2 px-4">{m.codPatrimonial}</td>
                 <td className="py-2 px-4">{m.numSerie}</td>
                 <td className="py-2 px-4">{m.localizacao}</td>
-                <td className="py-2 px-4">{m.status}</td>
                 <td className="py-2 px-4">
                   {m.valor?.toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
                   })}
                 </td>
+                <td className="py-2 px-4">{m.status}</td>
                 <td className="py-2 px-4">{m.idResponsavel}</td>
               </tr>
             ))}

@@ -5,6 +5,7 @@ export default function RegistrarMovimentacao() {
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
   const [sucesso, setSucesso] = useState(null);
+  const [maquinaSelecionada, setMaquinaSelecionada] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +27,6 @@ export default function RegistrarMovimentacao() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     const form = event.target;
 
     const formData = {
@@ -34,7 +34,7 @@ export default function RegistrarMovimentacao() {
       idMaquinaMovimentada: form[1].value,
       idResponsavel: form[2].value || null,
       tipo: form[3].value,
-      origem: form[4].value || null,
+      origem: maquinaSelecionada?.localizacao || null,
       destino: form[5].value || null,
     };
 
@@ -42,6 +42,7 @@ export default function RegistrarMovimentacao() {
       await axios.post(`${import.meta.env.VITE_API_BASE_URL}/movimentacoes`, formData);
       setSucesso("Movimentação registrada com sucesso!");
       form.reset();
+      setMaquinaSelecionada(null);
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
@@ -55,7 +56,6 @@ export default function RegistrarMovimentacao() {
         Registrar Movimentação
       </h1>
 
-      {/* Notificação de sucesso */}
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
           {sucesso}
@@ -66,7 +66,7 @@ export default function RegistrarMovimentacao() {
         className="max-w-2xl mx-auto space-y-8 text-lg"
         onSubmit={handleSubmit}
       >
-        {/* Data da movimentação */}
+        {/* Data */}
         <div className="flex justify-between items-center">
           <label className="font-semibold">Data da movimentação:</label>
           <input
@@ -76,40 +76,45 @@ export default function RegistrarMovimentacao() {
           />
         </div>
 
-        {/* Máquina movimentada */}
+        {/* Máquina */}
         <div className="flex justify-between items-center">
           <label className="font-semibold">Máquina movimentada:</label>
           <select
-  name="maquina"
-  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
-  required
->
-  <option value="">Selecione uma máquina</option>
-  {maquinas.map((maq) => (
-    <option key={maq.idMaquina} value={maq.idMaquina}>
-      {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
-    </option>
-  ))}
-</select>
+            name="maquina"
+            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+            required
+            onChange={(e) => {
+              const idSelecionado = e.target.value;
+              const maquina = maquinas.find((m) => m.codPatrimonial.toString() === idSelecionado);
+              setMaquinaSelecionada(maquina || null);
+            }}
+          >
+            <option value="">Selecione uma máquina</option>
+            {maquinas.map((maq) => (
+              <option key={maq.idMaquina} value={maq.idMaquina}>
+                {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Responsável */}
         <div className="flex justify-between items-center">
           <label className="font-semibold">Responsável:</label>
           <select
-  name="responsavel"
-  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
->
-  <option value="">Nenhum responsável</option>
-  {funcionarios.map((funcionario) => (
-    <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
-      {funcionario.nomeFuncionario} - ID: {funcionario.idFuncionario}
-    </option>
-  ))}
-</select>
+            name="responsavel"
+            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+          >
+            <option value="">Nenhum responsável</option>
+            {funcionarios.map((funcionario) => (
+              <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
+                {funcionario.nomeFuncionario} - ID: {funcionario.idFuncionario}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Tipo de movimentação */}
+        {/* Tipo */}
         <div className="flex justify-between items-center">
           <label className="font-semibold">Tipo de movimentação:</label>
           <select
@@ -123,36 +128,25 @@ export default function RegistrarMovimentacao() {
           </select>
         </div>
 
-        {/* Origem */}
+        {/* Origem automática */}
         <div className="flex justify-between items-center">
           <label className="font-semibold">Origem:</label>
-          <select
-  name="origem"
-  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
->
-  <option value="">Nenhuma origem</option>
-  {maquinas.map((maq) => (
-    <option key={maq.idMaquina} value={maq.localizacao}>
-      {maq.localizacao}
-    </option>
-  ))}
-</select>
+          <input
+            type="text"
+            className="bg-gray-300 rounded px-4 py-2 w-72"
+            value={maquinaSelecionada?.localizacao || ""}
+            readOnly
+          />
         </div>
 
         {/* Destino */}
         <div className="flex justify-between items-center">
-          <label className="font-semibold">Destino:</label>
-          <select
-  name="destino"
-  className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
->
-  <option value="">Nenhum destino</option>
-  {maquinas.map((maq) => (
-    <option key={maq.idMaquina} value={maq.localizacao}>
-      {maq.localizacao}
-    </option>
-  ))}
-</select>
+          <label className="font-semibold">Digite o destino máquina:</label>
+          <input
+            type="text"
+            className="bg-gray-300 rounded px-4 py-2 w-72"
+            required
+          />
         </div>
 
         {/* Botão */}
@@ -166,7 +160,7 @@ export default function RegistrarMovimentacao() {
         </div>
       </form>
 
-      {/* Animação CSS para fade in */}
+      {/* CSS para fade in */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }

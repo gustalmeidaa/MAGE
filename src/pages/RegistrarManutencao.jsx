@@ -4,7 +4,16 @@ import axios from "axios";
 export default function RegistrarManutencao() {
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
-  const [sucesso, setSucesso] = useState(null); // mensagem de sucesso
+  const [sucesso, setSucesso] = useState(null);
+
+  // ALTERAÇÃO: Estado para gerenciar os dados do formulário
+  const [formData, setFormData] = useState({
+    data: "",
+    idMaquina: "",
+    idFuncionario: "",
+    tipoManutencao: "preventiva", // Valor padrão
+    procedimentos: "",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,23 +32,28 @@ export default function RegistrarManutencao() {
     fetchData();
   }, []);
 
+  // ALTERAÇÃO: Função genérica para lidar com mudanças nos campos
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const form = event.target;
-
-    const formData = {
-      data: form[0].value,
-      idMaquina: form[1].value,
-      idFuncionario: form[2].value,
-      tipoManutencao: form[3].value,
-      procedimentos: form[4].value,
-    };
-
     try {
+      // ALTERAÇÃO: Enviando os dados do estado 'formData'
       await axios.post(`${import.meta.env.VITE_API_BASE_URL}/manutencoes`, formData);
       setSucesso("Manutenção registrada com sucesso!");
-      form.reset();
+      
+      // Limpa o formulário resetando o estado
+      setFormData({
+        data: "", idMaquina: "", idFuncionario: "",
+        tipoManutencao: "preventiva", procedimentos: "",
+      });
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
@@ -48,90 +62,122 @@ export default function RegistrarManutencao() {
   };
 
   return (
-    <div className="container">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-12">
+    <>
+      {/* ALTERAÇÃO: Título responsivo */}
+      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         Registrar Manutenção
       </h1>
 
-      {/* Cartão de sucesso */}
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
           {sucesso}
         </div>
       )}
 
-      <form className="max-w-2xl mx-auto space-y-8 text-lg" onSubmit={handleSubmit}>
-        {/* Campo de data */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Data da manutenção:</label>
+      <form className="max-w-2xl mx-auto space-y-6 text-base" onSubmit={handleSubmit}>
+        {/* ALTERAÇÃO: Layout de cada campo agora é responsivo (coluna -> linha) */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="data">
+            Data da manutenção:
+          </label>
           <input
-            className="bg-gray-300 rounded px-4 py-2 w-72"
-            type="datetime-local"
             id="data"
             name="data"
+            type="datetime-local"
+            // ALTERAÇÃO: Largura responsiva
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            value={formData.data}
+            onChange={handleChange}
             required
           />
         </div>
 
-        {/* Campo da máquina */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Máquina manutenida:</label>
-          <select name="maquina" className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
-            <option value="">Nenhuma máquina</option>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="idMaquina">
+            Máquina:
+          </label>
+          <select
+            id="idMaquina"
+            name="idMaquina"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72 font-semibold"
+            value={formData.idMaquina}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Selecione a máquina</option>
             {maquinas.map((maq) => (
               <option key={`maquina-${maq.idMaquina}`} value={maq.idMaquina}>
-                {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
+                {maq.codPatrimonial || `Série: ${maq.numSerie}`}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Campo de responsável */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Responsável pela manutenção:</label>
-          <select name="responsavel" className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
-            <option value="">Nenhum responsável</option>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="idFuncionario">
+            Responsável:
+          </label>
+          <select
+            id="idFuncionario"
+            name="idFuncionario"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72 font-semibold"
+            value={formData.idFuncionario}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Selecione o responsável</option>
             {funcionarios.map((f) => (
               <option key={`funcionario-${f.idFuncionario}`} value={f.idFuncionario}>
-                {f.nomeFuncionario} - ID: {f.idFuncionario}
+                {f.nomeFuncionario}
               </option>
             ))}
           </select>
         </div>
 
-
-        {/* Tipo de manutenção */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Tipo de manutenção:</label>
-          <select name="tipo" className="bg-gray-300 rounded px-4 py-2 w-72 font-bold" required>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="tipoManutencao">
+            Tipo de manutenção:
+          </label>
+          <select
+            id="tipoManutencao"
+            name="tipoManutencao"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72 font-semibold"
+            value={formData.tipoManutencao}
+            onChange={handleChange}
+            required
+          >
             <option value="preventiva">Preventiva</option>
             <option value="corretiva">Corretiva</option>
           </select>
         </div>
 
-        {/* Campo descritivo */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">O que foi feito:</label>
+        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <label className="font-semibold pt-2" htmlFor="procedimentos">
+            Procedimentos realizados:
+          </label>
           <textarea
-            name="descricao"
-            className="bg-gray-300 rounded w-72 resize-none px-4 py-2"
+            id="procedimentos"
+            name="procedimentos"
+            className="bg-gray-200 rounded w-full md:w-72 resize-none px-4 py-2"
             placeholder="Digite aqui..."
+            rows="4"
+            value={formData.procedimentos}
+            onChange={handleChange}
             required
           ></textarea>
         </div>
 
-        {/* Botão de envio */}
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-4">
           <button
             type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full"
+            // ALTERAÇÃO: Botão com largura responsiva
+            className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
             Registrar
           </button>
         </div>
       </form>
 
-      {/* Animação CSS para fade in */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
@@ -141,6 +187,6 @@ export default function RegistrarManutencao() {
           animation: fadeIn 0.5s ease forwards;
         }
       `}</style>
-    </div>
+    </>
   );
 }

@@ -5,7 +5,16 @@ export default function RegistrarMovimentacao() {
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
   const [sucesso, setSucesso] = useState(null);
-  const [maquinaSelecionada, setMaquinaSelecionada] = useState(null);
+
+  // ALTERAÇÃO: Estado único para gerenciar todos os dados do formulário
+  const [formData, setFormData] = useState({
+    data: "",
+    idMaquinaMovimentada: "",
+    idResponsavel: "",
+    tipo: "entrada", // Valor padrão
+    origem: "",
+    destino: "",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -14,35 +23,47 @@ export default function RegistrarMovimentacao() {
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/maquinas`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/funcionarios`),
         ]);
-
         setMaquinas(resMaquinas.data);
         setFuncionarios(resFuncionarios.data);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
     };
-
     fetchData();
   }, []);
 
+  // ALTERAÇÃO: Função de 'change' aprimorada para lidar com a lógica da origem
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Atualiza o estado para o campo que foi alterado
+    setFormData(prevState => ({ ...prevState, [name]: value }));
+
+    // Lógica especial: se a máquina for alterada, atualiza a origem
+    if (name === "idMaquinaMovimentada") {
+      const maquina = maquinas.find((m) => m.idMaquina.toString() === value);
+      setFormData(prevState => ({
+        ...prevState,
+        origem: maquina ? maquina.localizacao : "",
+      }));
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const form = event.target;
-
-    const formData = {
-      data: form[0].value,
-      idMaquinaMovimentada: form[1].value,
-      idResponsavel: form[2].value || null,
-      tipo: form[3].value,
-      origem: maquinaSelecionada?.localizacao || null,
-      destino: form[5].value || null,
-    };
-
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/movimentacoes`, formData);
+      // ALTERAÇÃO: Enviando os dados do estado 'formData'
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/movimentacoes`, {
+          ...formData,
+          idResponsavel: formData.idResponsavel || null
+      });
       setSucesso("Movimentação registrada com sucesso!");
-      form.reset();
-      setMaquinaSelecionada(null);
+      
+      // Limpa o formulário resetando o estado
+      setFormData({
+        data: "", idMaquinaMovimentada: "", idResponsavel: "",
+        tipo: "entrada", origem: "", destino: "",
+      });
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
@@ -51,8 +72,9 @@ export default function RegistrarMovimentacao() {
   };
 
   return (
-    <div className="container">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-12">
+    <>
+      {/* ALTERAÇÃO: Título responsivo */}
+      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         Registrar Movimentação
       </h1>
 
@@ -62,64 +84,66 @@ export default function RegistrarMovimentacao() {
         </div>
       )}
 
-      <form
-        className="max-w-2xl mx-auto space-y-8 text-lg"
-        onSubmit={handleSubmit}
-      >
-        {/* Data */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Data da movimentação:</label>
+      <form className="max-w-2xl mx-auto space-y-6 text-base" onSubmit={handleSubmit}>
+        {/* ALTERAÇÃO: Layout de todos os campos agora é responsivo */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="data">Data da movimentação:</label>
           <input
-            className="bg-gray-300 rounded px-4 py-2 w-72"
+            id="data"
+            name="data"
             type="datetime-local"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            value={formData.data}
+            onChange={handleChange}
             required
           />
         </div>
 
-        {/* Máquina */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Máquina movimentada:</label>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="idMaquinaMovimentada">Máquina movimentada:</label>
           <select
-            name="maquina"
-            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+            id="idMaquinaMovimentada"
+            name="idMaquinaMovimentada"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72 font-semibold"
+            value={formData.idMaquinaMovimentada}
+            onChange={handleChange}
             required
-            onChange={(e) => {
-              const idSelecionado = e.target.value;
-              const maquina = maquinas.find((m) => m.codPatrimonial.toString() === idSelecionado);
-              setMaquinaSelecionada(maquina || null);
-            }}
           >
             <option value="">Selecione uma máquina</option>
             {maquinas.map((maq) => (
               <option key={maq.idMaquina} value={maq.idMaquina}>
-                {maq.codPatrimonial || maq.numSerie || `Máquina ${maq.idMaquina}`}
+                {maq.codPatrimonial || `Série: ${maq.numSerie}`}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Responsável */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Responsável:</label>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="idResponsavel">Responsável:</label>
           <select
-            name="responsavel"
-            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+            id="idResponsavel"
+            name="idResponsavel"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72 font-semibold"
+            value={formData.idResponsavel}
+            onChange={handleChange}
           >
             <option value="">Nenhum responsável</option>
-            {funcionarios.map((funcionario) => (
-              <option key={funcionario.idFuncionario} value={funcionario.idFuncionario}>
-                {funcionario.nomeFuncionario} - ID: {funcionario.idFuncionario}
+            {funcionarios.map((f) => (
+              <option key={f.idFuncionario} value={f.idFuncionario}>
+                {f.nomeFuncionario}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Tipo */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Tipo de movimentação:</label>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="tipo">Tipo de movimentação:</label>
           <select
+            id="tipo"
             name="tipo"
-            className="bg-gray-300 rounded px-4 py-2 w-72 font-bold"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72 font-semibold"
+            value={formData.tipo}
+            onChange={handleChange}
             required
           >
             <option value="entrada">Entrada</option>
@@ -128,39 +152,41 @@ export default function RegistrarMovimentacao() {
           </select>
         </div>
 
-        {/* Origem automática */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Origem:</label>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="origem">Origem:</label>
           <input
+            id="origem"
+            name="origem"
             type="text"
-            className="bg-gray-300 rounded px-4 py-2 w-72"
-            value={maquinaSelecionada?.localizacao || ""}
+            className="bg-gray-300 rounded px-4 py-2 w-full md:w-72 cursor-not-allowed"
+            value={formData.origem} // O valor vem do estado
             readOnly
           />
         </div>
 
-        {/* Destino */}
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Digite o destino máquina:</label>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="destino">Destino da máquina:</label>
           <input
+            id="destino"
+            name="destino"
             type="text"
-            className="bg-gray-300 rounded px-4 py-2 w-72"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            value={formData.destino}
+            onChange={handleChange}
             required
           />
         </div>
 
-        {/* Botão */}
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-4">
           <button
             type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full"
+            className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
             Registrar
           </button>
         </div>
       </form>
 
-      {/* CSS para fade in */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
@@ -170,6 +196,6 @@ export default function RegistrarMovimentacao() {
           animation: fadeIn 0.5s ease forwards;
         }
       `}</style>
-    </div>
+    </>
   );
 }

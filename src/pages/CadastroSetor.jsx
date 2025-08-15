@@ -1,41 +1,34 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
 export default function CadastroSetor() {
-  const [setores, setSetor] = useState([]);
-  const [sucesso, setSucesso] = useState(null); // Estado para mensagem de sucesso
+  const [sucesso, setSucesso] = useState(null);
 
-  useEffect(() => {
-    const fetchSetores = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/setores`
-        );
-        setSetor(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar setores:", error);
-      }
-    };
+  // ALTERAÇÃO: Estado para gerenciar os dados do formulário
+  const [formData, setFormData] = useState({
+    nomeSetor: "",
+  });
 
-    fetchSetores();
-  }, []);
+  // ALTERAÇÃO: Função para lidar com mudanças no campo
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const formData = {
-      nomeSetor: event.target[0].value,
-    };
-
     try {
-      const response = await axios.post(
+      // ALTERAÇÃO: Enviando os dados do estado
+      await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/setores`,
         formData
       );
       setSucesso("Setor cadastrado com sucesso!");
-      event.target[0].value = "";
+      
+      // Limpa o formulário resetando o estado
+      setFormData({ nomeSetor: "" });
 
-      // Oculta a mensagem após 4 segundos
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao cadastrar setor:", error);
@@ -44,11 +37,11 @@ export default function CadastroSetor() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-12">
+      {/* ALTERAÇÃO: Título responsivo */}
+      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         Cadastrar Setor
       </h1>
 
-      {/* Cartão de sucesso */}
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
           {sucesso}
@@ -56,29 +49,37 @@ export default function CadastroSetor() {
       )}
 
       <form
-        className="max-w-2xl mx-auto space-y-8 text-lg"
+        className="max-w-2xl mx-auto space-y-6 text-base"
         onSubmit={handleSubmit}
       >
-        <div className="flex justify-between items-center">
-          <label className="font-semibold">Digite o nome do setor:</label>
+        {/* ALTERAÇÃO: Layout responsivo (coluna no mobile, linha no desktop) */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="nomeSetor">
+            Nome do setor:
+          </label>
           <input
+            id="nomeSetor"
+            name="nomeSetor"
             type="text"
-            className="bg-gray-300 rounded px-4 py-2 w-72"
+            // ALTERAÇÃO: Largura responsiva
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            value={formData.nomeSetor}
+            onChange={handleChange}
             required
           />
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-4">
           <button
             type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full"
+            // ALTERAÇÃO: Botão com largura responsiva
+            className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
             Cadastrar
           </button>
         </div>
       </form>
 
-      {/* Animação CSS simples para fade in */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }

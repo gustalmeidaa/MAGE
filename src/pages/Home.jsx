@@ -31,27 +31,36 @@ export default function Home() {
     fetchStatusCounts();
   }, []);
 
-  // Função para calcular altura da barra
+  // Função para calcular altura da barra (sem alterações)
   const getBarHeight = (count) => {
     const maxCount = Math.max(
       statusCounts.ativas,
       statusCounts.inativas,
       statusCounts.emManutencao,
-      1 // Evita divisão por zero
+      1
     );
-    const maxHeight = 256; // Altura máxima (igual a h-64)
+    const maxHeight = 256;
     const altura = (count / maxCount) * maxHeight;
-    return `${Math.max(altura, 10)}px`; // Altura mínima 10px
+    return `${Math.max(altura, 10)}px`;
   };
 
   return (
     <div className="container mx-auto">
-      <main className="flex-1 p-10">
-        <h1 className="text-3xl font-bold text-gray-800">Máquinas da Empresa</h1>
+      {/* ALTERAÇÃO: Padding menor em telas pequenas (p-4) e maior a partir de telas médias (md:p-10) */}
+      <main className="flex-1 p-4 md:p-10">
+        {/* ALTERAÇÃO: Tamanho da fonte menor em telas pequenas */}
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+          Máquinas da Empresa
+        </h1>
         <p className="text-gray-400 mt-2">Status geral das máquinas</p>
 
         {/* Gráfico */}
-        <div className="flex justify-center gap-16 mt-10 bg-blue-50 rounded-xl p-6 shadow-md">
+        {/* ALTERAÇÃO:
+            - flex-col: Empilha as barras verticalmente em telas pequenas (mobile-first).
+            - md:flex-row: Alinha as barras horizontalmente em telas médias e maiores.
+            - gap-8 / md:gap-16: Ajusta o espaçamento para cada layout.
+        */}
+        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 mt-10 bg-blue-50 rounded-xl p-6 shadow-md">
           {[
             { label: "Ativas", color: "bg-green-500", count: statusCounts.ativas },
             { label: "Inativas", color: "bg-red-500", count: statusCounts.inativas },
@@ -72,8 +81,9 @@ export default function Home() {
         </div>
 
         {/* Totais */}
-        <div className="mt-10">
-          <h2 className="font-bold text-lg mb-4">Totais</h2>
+        {/* ALTERAÇÃO: Adicionado max-w-md para melhorar a legibilidade em telas muito largas */}
+        <div className="mt-10 max-w-md mx-auto">
+          <h2 className="font-bold text-lg mb-4 text-center md:text-left">Totais</h2>
           <div className="flex flex-col gap-6">
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-green-500 mr-4"></div>
@@ -93,20 +103,25 @@ export default function Home() {
           </div>
         </div>
 
-    {/* Botões */}
-    <div className="mt-10 flex justify-center gap-6">
-      <Link to="/cadastrar-maquina">
-        <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
-          Cadastrar Máquina
-        </button>
-      </Link>
-      <Link to="/busca">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-lg">
-          Buscar Máquina
-        </button>
-      </Link>
-    </div>
-
+        {/* Botões */}
+        {/* ALTERAÇÃO: 
+            - flex-col: Empilha os botões em telas pequenas.
+            - md:flex-row: Alinha horizontalmente a partir de telas médias.
+            - gap-4: Espaçamento menor para o layout de coluna.
+        */}
+        <div className="mt-10 flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6">
+          {/* ALTERAÇÃO: w-full e md:w-auto para os botões ocuparem toda a largura no mobile */}
+          <Link to="/cadastrar-maquina" className="w-full md:w-auto">
+            <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
+              Cadastrar Máquina
+            </button>
+          </Link>
+          <Link to="/busca" className="w-full md:w-auto">
+            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-lg">
+              Buscar Máquina
+            </button>
+          </Link>
+        </div>
       </main>
     </div>
   );

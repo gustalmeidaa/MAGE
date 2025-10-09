@@ -13,7 +13,7 @@ export default function CadastroMaquina() {
     valor: "",
     idResponsavel: "",
     localizacao: "",
-    status: "Ativa", // Valor inicial padrão
+    status: "ATIVA", // Valor inicial padrão
   });
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function CadastroMaquina() {
       // Limpa o formulário resetando o estado
       setFormData({
         codPatrimonial: "", numSerie: "", valor: "", idResponsavel: "",
-        localizacao: "", status: "Ativa",
+        localizacao: "", status: "ATIVA",
       });
 
       setTimeout(() => setSucesso(null), 4000);
@@ -175,9 +175,9 @@ export default function CadastroMaquina() {
             onChange={handleChange}
             required
           >
-            <option>Ativa</option>
-            <option>Inativa</option>
-            <option>Em manutenção</option>
+            <option>ATIVA</option>
+            <option>INATIVA</option>
+            <option>EM_MANUTENCAO</option>
           </select>
         </div>
 

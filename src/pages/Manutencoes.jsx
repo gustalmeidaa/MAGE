@@ -58,9 +58,9 @@ export default function Movimentacoes() {
       </div>
             <div className="mt-8 flex justify-center">
         {/* ALTERAÇÃO: Botão com largura total em telas pequenas */}
-        <Link to="/agendar-manutencao" className="w-full max-w-xs md:w-auto">
+        <Link to="/manutencoes-agendadas" className="w-full max-w-xs md:w-auto">
           <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
-            Agendar Manutenção
+            Manutenções Agendadas
           </button>
         </Link>
       </div>

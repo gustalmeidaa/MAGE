@@ -7,6 +7,7 @@ import Busca from "./pages/Busca";
 import Funcionarios from "./pages/Funcionarios";
 import RegistrarMovimentacao from "./pages/RegistrarMovimentacao";
 import RegistrarManutencao from "./pages/RegistrarManutencao";
+import ManutencoesAgendadas from "./pages/ManutencoesAgendadas";
 import AgendarManutencao from "./pages/AgendarManutencao"
 import CadastroFuncionario from "./pages/CadastroFuncionario"
 import Movimentacoes from "./pages/Movimentacoes"
@@ -14,6 +15,7 @@ import Manutencoes from "./pages/Manutencoes"
 import Login from "./pages/Login"
 import Setor from "./pages/Setor"
 import CadastroSetor from "./pages/CadastroSetor"
+
 
 
 export default function App() {
@@ -27,6 +29,7 @@ export default function App() {
           <Route path="funcionarios" element={<Funcionarios />} />
           <Route path="registrar-movimentacao" element={<RegistrarMovimentacao />} />
           <Route path="registrar-manutencao" element={<RegistrarManutencao />} /> 
+          <Route path="manutencoes-agendadas" element={<ManutencoesAgendadas />} /> 
           <Route path="agendar-manutencao" element={<AgendarManutencao />} />             
           <Route path="cadastrar-funcionario" element={<CadastroFuncionario />} />       
           <Route path="movimentacoes" element={<Movimentacoes />} />       

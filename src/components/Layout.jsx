@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, Link } from "react-router-dom";
+import { getUsernameFromToken, logout } from "../auth"; // ✅ importe isso
 
-// Um ícone simples de "Hambúrguer" para o botão
 const HamburgerIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -11,26 +11,24 @@ const HamburgerIcon = () => (
     stroke="currentColor"
     strokeWidth={2}
   >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M4 6h16M4 12h16M4 18h16"
-    />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
   </svg>
 );
 
 export default function Layout() {
-  // Estado para controlar se a sidebar está aberta ou fechada em telas pequenas
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState(null);
 
-  // Função para fechar a sidebar (útil para os links de navegação)
-  const handleLinkClick = () => {
-    setSidebarOpen(false);
-  };
+  useEffect(() => {
+    const name = getUsernameFromToken();
+    setUsername(name);
+  }, []);
+
+  const handleLinkClick = () => setSidebarOpen(false);
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
-      {/* Overlay para escurecer o conteúdo quando a sidebar estiver aberta no mobile */}
+      {/* Overlay para mobile */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-20 md:hidden"
@@ -48,12 +46,28 @@ export default function Layout() {
         `}
       >
         <div className="text-center mb-10">
-          <Link to="/login" className="text-white font-bold" onClick={handleLinkClick}>
-            Login
-          </Link>
+          {username ? (
+            <div className="flex flex-col items-center space-y-1">
+              <span className="font-bold text-lg">{username}</span>
+              <button
+                onClick={logout}
+                className="text-sm text-red-400 hover:text-red-600"
+              >
+                Sair
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="text-white font-bold"
+              onClick={handleLinkClick}
+            >
+              Login
+            </Link>
+          )}
         </div>
+
         <nav className="flex flex-col space-y-4 w-full">
-          {/* ALTERAÇÃO: Trocamos <a> por <Link> e adicionamos o onClick para fechar o menu */}
           <Link to="/" className="text-white hover:text-gray-300" onClick={handleLinkClick}>
             Máquinas
           </Link>
@@ -72,10 +86,9 @@ export default function Layout() {
         </nav>
       </aside>
 
-      {/* Área de conteúdo (páginas) */}
+      {/* Conteúdo */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="flex justify-between items-center p-4 bg-white shadow-md md:hidden">
-          {/* Botão Hambúrguer - visível apenas em telas pequenas (md:hidden) */}
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-gray-800 focus:outline-none md:hidden"

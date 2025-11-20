@@ -15,7 +15,6 @@ import Manutencoes from "./pages/Manutencoes";
 import Login from "./pages/Login";
 import Setor from "./pages/Setor";
 import CadastroSetor from "./pages/CadastroSetor";
-
 import ProtectedRoute from "./ProtectedRoute";
 
 export default function App() {

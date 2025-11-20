@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import api from "../api"; 
 
 export default function AgendarManutencao() {
-  // REMOÇÃO: Estado de 'funcionarios' não é mais necessário
   const [maquinas, setMaquinas] = useState([]);
   const [sucesso, setSucesso] = useState(null);
+  const [erro, setErro] = useState(null); // Estado para gerenciar erros
 
-  // ALTERAÇÃO: Estado do formulário para corresponder ao modelo ManutencaoAgendada
+  // Estado do formulário para corresponder ao modelo ManutencaoAgendada
   const [formData, setFormData] = useState({
     dataAgendada: "",
     idMaquina: "",
@@ -15,20 +16,23 @@ export default function AgendarManutencao() {
   });
 
   useEffect(() => {
-    // ALTERAÇÃO: Busca apenas as máquinas, já que funcionários não são necessários
+    // Busca apenas as máquinas
     const fetchMaquinas = async () => {
+      setErro(null);
       try {
-        const resMaquinas = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/maquinas`);
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
+        const resMaquinas = await api.get("/maquinas");
         setMaquinas(resMaquinas.data);
       } catch (error) {
         console.error("Erro ao buscar máquinas:", error);
+        setErro("Não foi possível carregar a lista de máquinas.");
       }
     };
 
     fetchMaquinas();
   }, []);
 
-  // Função genérica para lidar com mudanças nos campos (sem alterações)
+  // Função genérica para lidar com mudanças nos campos
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -39,10 +43,13 @@ export default function AgendarManutencao() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setSucesso(null);
+    setErro(null);
 
     try {
-      // ALTERAÇÃO: Endpoint para agendamento e envio do novo 'formData'
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/manutencoes-agendadas`, formData);
+      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
+      // Endpoint para agendamento e envio do novo 'formData'
+      await api.post("/manutencoes-agendadas", formData);
       setSucesso("Manutenção agendada com sucesso!");
       
       // Limpa o formulário resetando o estado para a nova estrutura
@@ -54,12 +61,15 @@ export default function AgendarManutencao() {
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao agendar manutenção:", error);
+      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar agendar a manutenção.";
+      setErro(msgErro);
+      setTimeout(() => setErro(null), 5000);
     }
   };
 
   return (
     <>
-      {/* ALTERAÇÃO: Título da página */}
+      {/* Título da página */}
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         Agendar Manutenção
       </h1>
@@ -67,6 +77,12 @@ export default function AgendarManutencao() {
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
           {sucesso}
+        </div>
+      )}
+
+      {erro && (
+        <div className="max-w-md mx-auto mb-8 p-4 bg-red-100 border border-red-400 rounded-lg text-red-700 shadow-md animate-fade-in">
+          {erro}
         </div>
       )}
 
@@ -78,7 +94,7 @@ export default function AgendarManutencao() {
           </label>
           <input
             id="dataAgendada"
-            name="dataAgendada" // ALTERAÇÃO: Nome do campo
+            name="dataAgendada" 
             type="datetime-local"
             className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
             value={formData.dataAgendada}
@@ -109,8 +125,6 @@ export default function AgendarManutencao() {
           </select>
         </div>
         
-        {/* REMOÇÃO: O campo de seleção de funcionário/responsável foi removido */}
-
         {/* Campo de Tipo de Manutenção */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <label className="font-semibold" htmlFor="tipoManutencao">
@@ -118,7 +132,7 @@ export default function AgendarManutencao() {
           </label>
           <select
             id="tipoManutencao"
-            name="tipoManutencao" // ALTERAÇÃO: Nome do campo
+            name="tipoManutencao"
             className="bg-gray-200 rounded px-4 py-2 w-full md:w-72 font-semibold"
             value={formData.tipoManutencao}
             onChange={handleChange}
@@ -152,12 +166,12 @@ export default function AgendarManutencao() {
             type="submit"
             className="w-full max-w-xs md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
-            Agendar {/* ALTERAÇÃO: Texto do botão */}
+            Agendar
           </button>
         </div>
       </form>
 
-      {/* Animação (sem alterações) */}
+      {/* Animação */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }

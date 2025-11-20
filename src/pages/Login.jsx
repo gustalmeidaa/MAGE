@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+// 💡 Importa a instância do Axios configurada
+import api from "../api"; 
 
 export default function Login() {
   const [login, setLogin] = useState("");
@@ -13,25 +14,33 @@ export default function Login() {
     setError("");
 
     try {
-      // Envia para o endpoint /auth/login do backend
-      const response = await axios.post("http://localhost:8080/auth/login", {
+      // 💡 Usa a instância 'api'
+      const response = await api.post("/auth/login", {
         login,
         senha,
       });
 
       const token = response.data?.token;
+      const loginUsuario = response.data?.loginUsuario; 
+
       if (token) {
-        // Armazena o token no localStorage
-        localStorage.setItem("token", token);
+        localStorage.setItem("userToken", token);
+        
+        if (loginUsuario) {
+            localStorage.setItem("loginUsuario", loginUsuario);
+        } else {
+            localStorage.setItem("loginUsuario", login); 
+        }
 
         // Redireciona para a página principal
         navigate("/");
       } else {
-        setError("Erro: token não retornado pelo servidor");
+        setError("Erro: O servidor não retornou o token de acesso.");
       }
     } catch (err) {
-      console.error(err);
-      setError("Usuário ou senha incorretos");
+      console.error("Erro na requisição de login:", err);
+      // Trata erros 401/403 de forma específica se necessário
+      setError("Usuário ou senha incorretos. Verifique suas credenciais.");
     }
   };
 

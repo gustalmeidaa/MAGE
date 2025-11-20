@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+// 💡 Usa a instância configurada do Axios (com token)
 import api from "../api";
 // Importações para PDF
 import jsPDF from "jspdf";
@@ -16,6 +17,7 @@ export default function ManutencoesAgendadas() {
 
   const carregarAgendamentos = async () => {
     try {
+      // 💡 Requisição segura usando a instância 'api'
       const response = await api.get("/manutencoes-agendadas");
       
       // Garante que é um array e ordena por ID
@@ -37,6 +39,7 @@ export default function ManutencoesAgendadas() {
       return;
 
     try {
+      // 💡 Requisição segura usando a instância 'api'
       await api.delete(`/manutencoes-agendadas/${id}`);
       setAgendamentos((prev) =>
         prev.filter((item) => item.idManutencaoAgendada !== id)
@@ -90,7 +93,7 @@ export default function ManutencoesAgendadas() {
     link.click();
   };
 
-  // --- FUNÇÃO DE EXPORTAR PDF ADICIONADA ---
+  // FUNÇÃO DE EXPORTAR PDF
   const handleExportPDF = () => {
     if (agendamentos.length === 0) {
       alert("Nenhum dado para exportar.");
@@ -135,7 +138,6 @@ export default function ManutencoesAgendadas() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
-  // --- FIM DA FUNÇÃO ---
 
   if (loading)
     return <p className="p-6 text-gray-600">Carregando agendamentos...</p>;
@@ -148,7 +150,7 @@ export default function ManutencoesAgendadas() {
           Manutenções Agendadas
         </h2>
 
-        {/* --- BOTÕES ATUALIZADOS --- */}
+        {/* BOTÕES */}
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleNovoAgendamento}
@@ -164,7 +166,6 @@ export default function ManutencoesAgendadas() {
             Exportar para CSV 📊
           </button>
 
-          {/* Botão de PDF adicionado */}
           <button
             onClick={handleExportPDF}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow-md transition"
@@ -172,7 +173,7 @@ export default function ManutencoesAgendadas() {
             Exportar para PDF 📄
           </button>
         </div>
-        {/* --- FIM DA ATUALIZAÇÃO --- */}
+        {/* FIM DOS BOTÕES */}
       </div>
 
       {agendamentos.length === 0 ? (

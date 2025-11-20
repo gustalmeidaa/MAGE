@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 // Importações para PDF
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import api from "../api"; 
 
 export default function Movimentacoes() {
   const [movimentacoes, setMovimentacoes] = useState([]);
@@ -20,10 +22,9 @@ export default function Movimentacoes() {
     const fetchMovimentacoes = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/movimentacoes`
-        );
-        const data = await response.json();
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
+        const response = await api.get("/movimentacoes");
+        const data = response.data;
         
         // Garante que é um array e ordena por ID
         const dataArray = data || [];
@@ -46,17 +47,15 @@ export default function Movimentacoes() {
     let dataFiltroFormatada = "";
     if (filtro.data) {
       try {
-        dataFiltroFormatada = new Date(filtro.data).toLocaleDateString("pt-BR", {
-          timeZone: "UTC",
-        });
+        // Usa o formato AAAA-MM-DD para comparação precisa no filtro de data
+        const dataObj = new Date(filtro.data);
+        dataFiltroFormatada = dataObj.toISOString().split('T')[0];
       } catch (e) {
         /* Data inválida, ignora */
       }
     }
-
-    const dataMovFormatada = new Date(mov.data).toLocaleDateString("pt-BR", {
-      timeZone: "UTC",
-    });
+    
+    const dataMovFormatada = new Date(mov.data).toISOString().split('T')[0];
 
     return (
       (filtro.id ? mov.idMovimentacoes.toString().includes(filtro.id) : true) &&
@@ -109,7 +108,7 @@ export default function Movimentacoes() {
     link.click();
   };
 
-  // --- FUNÇÃO DE EXPORTAR PDF ADICIONADA ---
+  // FUNÇÃO DE EXPORTAR PDF
   const handleExportPDF = () => {
     if (filtrados.length === 0) {
       alert("Nenhum dado para exportar.");
@@ -158,8 +157,7 @@ export default function Movimentacoes() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
-  // --- FIM DA FUNÇÃO ---
-
+  
   if (loading)
     return <p className="p-6 text-gray-600">Carregando movimentações...</p>;
 
@@ -171,7 +169,7 @@ export default function Movimentacoes() {
           Lista de Movimentações
         </h2>
 
-        {/* --- BOTÕES ATUALIZADOS --- */}
+        {/* BOTÕES */}
         <div className="flex flex-wrap gap-3">
           <Link to="/registrar-movimentacao">
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md transition">
@@ -186,7 +184,6 @@ export default function Movimentacoes() {
             Exportar para CSV 📊
           </button>
 
-          {/* Botão de PDF adicionado */}
           <button
             onClick={handleExportPDF}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow-md transition"
@@ -194,7 +191,7 @@ export default function Movimentacoes() {
             Exportar para PDF 📄
           </button>
         </div>
-        {/* --- FIM DA ATUALIZAÇÃO --- */}
+        {/* FIM DOS BOTÕES */}
       </div>
 
       {/* Filtros */}

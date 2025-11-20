@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import api from "../api"; 
 
 export default function CadastroFuncionario() {
   const [setores, setSetores] = useState([]);
   const [sucesso, setSucesso] = useState(null);
+  const [erro, setErro] = useState(null); // Estado para gerenciar erros
 
-  // ALTERAÇÃO: Estado para gerenciar os dados do formulário
+  // Estado para gerenciar os dados do formulário
   const [formData, setFormData] = useState({
     nomeFuncionario: "",
     nomeSetor: "",
@@ -14,18 +16,21 @@ export default function CadastroFuncionario() {
   useEffect(() => {
     // Apenas a busca de setores é necessária para este formulário
     const fetchSetores = async () => {
+      setErro(null);
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/setores`);
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
+        const response = await api.get("/setores");
         setSetores(response.data);
       } catch (error) {
         console.error("Erro ao buscar setores:", error);
+        setErro("Não foi possível carregar a lista de setores.");
       }
     };
 
     fetchSetores();
   }, []);
 
-  // ALTERAÇÃO: Função genérica para lidar com mudanças nos campos
+  // Função genérica para lidar com mudanças nos campos
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -36,11 +41,13 @@ export default function CadastroFuncionario() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setSucesso(null);
+    setErro(null);
 
     try {
-      // ALTERAÇÃO: Enviando os dados do estado 'formData'
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/funcionarios`,
+      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
+      await api.post(
+        "/funcionarios",
         {...formData, nomeSetor: formData.nomeSetor || null } // Garante que valor nulo seja enviado se nada for selecionado
       );
       setSucesso("Funcionário cadastrado com sucesso!");
@@ -51,13 +58,16 @@ export default function CadastroFuncionario() {
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao cadastrar funcionário:", error);
+      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar cadastrar o funcionário.";
+      setErro(msgErro);
+      setTimeout(() => setErro(null), 5000);
     }
   };
 
   return (
     // O componente pai (Layout) já fornece o container, então usamos um Fragment <>
     <>
-      {/* ALTERAÇÃO: Título responsivo */}
+      {/* Título responsivo */}
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         Cadastrar Funcionário
       </h1>
@@ -68,8 +78,14 @@ export default function CadastroFuncionario() {
         </div>
       )}
 
+      {erro && (
+        <div className="max-w-md mx-auto mb-8 p-4 bg-red-100 border border-red-400 rounded-lg text-red-700 shadow-md animate-fade-in">
+          {erro}
+        </div>
+      )}
+
       <form className="max-w-2xl mx-auto space-y-6 text-base" onSubmit={handleSubmit}>
-        {/* ALTERAÇÃO: Layout de linha responsivo (coluna no mobile, linha no desktop) */}
+        {/* Layout de linha responsivo (coluna no mobile, linha no desktop) */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <label className="font-semibold" htmlFor="nomeFuncionario">
             Nome do funcionário:
@@ -78,7 +94,7 @@ export default function CadastroFuncionario() {
             id="nomeFuncionario"
             name="nomeFuncionario"
             type="text"
-            // ALTERAÇÃO: Largura responsiva (total no mobile, fixa no desktop)
+            // Largura responsiva (total no mobile, fixa no desktop)
             className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
             value={formData.nomeFuncionario}
             onChange={handleChange}
@@ -110,7 +126,7 @@ export default function CadastroFuncionario() {
         <div className="flex justify-center pt-4">
           <button
             type="submit"
-            // ALTERAÇÃO: Botão com largura responsiva
+            // Botão com largura responsiva
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
             Cadastrar

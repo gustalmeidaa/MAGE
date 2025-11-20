@@ -1,38 +1,41 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import api from "../api"; 
 
 export default function RegistrarManutencao() {
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
   const [sucesso, setSucesso] = useState(null);
+  const [erro, setErro] = useState(null); // Estado para gerenciar erros
 
-  // ALTERAÇÃO: Estado para gerenciar os dados do formulário
   const [formData, setFormData] = useState({
     data: "",
     idMaquina: "",
     idFuncionario: "",
-    tipoManutencao: "preventiva", // Valor padrão
+    tipoManutencao: "preventiva",
     procedimentos: "",
   });
 
   useEffect(() => {
     const fetchData = async () => {
+      setErro(null);
       try {
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT nas requisições
         const [resMaquinas, resFuncionarios] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/maquinas`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/funcionarios`),
+          api.get("/maquinas"),
+          api.get("/funcionarios"),
         ]);
         setMaquinas(resMaquinas.data);
         setFuncionarios(resFuncionarios.data);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
+        setErro("Não foi possível carregar a lista de máquinas e funcionários.");
       }
     };
 
     fetchData();
   }, []);
 
-  // ALTERAÇÃO: Função genérica para lidar com mudanças nos campos
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -43,10 +46,12 @@ export default function RegistrarManutencao() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setSucesso(null);
+    setErro(null);
 
     try {
-      // ALTERAÇÃO: Enviando os dados do estado 'formData'
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/manutencoes`, formData);
+      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
+      await api.post("/manutencoes", formData);
       setSucesso("Manutenção registrada com sucesso!");
       
       // Limpa o formulário resetando o estado
@@ -58,12 +63,14 @@ export default function RegistrarManutencao() {
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao registrar manutenção:", error);
+      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar registrar a manutenção.";
+      setErro(msgErro);
+      setTimeout(() => setErro(null), 5000);
     }
   };
 
   return (
     <>
-      {/* ALTERAÇÃO: Título responsivo */}
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         Registrar Manutenção
       </h1>
@@ -73,9 +80,14 @@ export default function RegistrarManutencao() {
           {sucesso}
         </div>
       )}
+      
+      {erro && (
+        <div className="max-w-md mx-auto mb-8 p-4 bg-red-100 border border-red-400 rounded-lg text-red-700 shadow-md animate-fade-in">
+          {erro}
+        </div>
+      )}
 
       <form className="max-w-2xl mx-auto space-y-6 text-base" onSubmit={handleSubmit}>
-        {/* ALTERAÇÃO: Layout de cada campo agora é responsivo (coluna -> linha) */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <label className="font-semibold" htmlFor="data">
             Data da manutenção:
@@ -84,7 +96,6 @@ export default function RegistrarManutencao() {
             id="data"
             name="data"
             type="datetime-local"
-            // ALTERAÇÃO: Largura responsiva
             className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
             value={formData.data}
             onChange={handleChange}
@@ -170,7 +181,6 @@ export default function RegistrarManutencao() {
         <div className="flex justify-center pt-4">
           <button
             type="submit"
-            // ALTERAÇÃO: Botão com largura responsiva
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
             Registrar

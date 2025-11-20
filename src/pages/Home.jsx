@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+// 💡 Importa a instância do Axios configurada para enviar o token JWT
+import api from "../api"; 
 
 export default function Home() {
   const [statusCounts, setStatusCounts] = useState({
@@ -11,27 +13,32 @@ export default function Home() {
   useEffect(() => {
     const fetchStatusCounts = async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/maquinas/status`
-        );
-        if (!response.ok) {
-          throw new Error("Erro ao buscar dados");
-        }
-        const data = await response.json();
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' em vez de 'fetch'
+        // 'api' anexa automaticamente o cabeçalho 'Authorization: Bearer <token>'
+        const response = await api.get("/maquinas/status"); 
+        
+        // Com Axios, a resposta de erro é tratada no bloco catch, e os dados estão em response.data
+        const data = response.data; 
+        
         setStatusCounts({
           ativas: data.ativas ?? 0,
           inativas: data.inativas ?? 0,
           emManutencao: data.emManutencao ?? 0,
         });
       } catch (error) {
-        console.error("Erro ao buscar status das máquinas:", error);
+        // Axios errors têm a propriedade response
+        if (error.response && error.response.status === 403) {
+            console.error("Acesso Negado: O token é inválido ou ausente.");
+            // O interceptador já deve ter chamado o logout, se for o caso.
+        } else {
+            console.error("Erro ao buscar status das máquinas:", error);
+        }
       }
     };
 
     fetchStatusCounts();
   }, []);
 
-  // Função para calcular altura da barra (sem alterações)
   const getBarHeight = (count) => {
     const maxCount = Math.max(
       statusCounts.ativas,
@@ -46,20 +53,13 @@ export default function Home() {
 
   return (
     <div className="container mx-auto">
-      {/* ALTERAÇÃO: Padding menor em telas pequenas (p-4) e maior a partir de telas médias (md:p-10) */}
       <main className="flex-1 p-4 md:p-10">
-        {/* ALTERAÇÃO: Tamanho da fonte menor em telas pequenas */}
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
           Máquinas da Empresa
         </h1>
         <p className="text-gray-400 mt-2">Status geral das máquinas</p>
 
         {/* Gráfico */}
-        {/* ALTERAÇÃO:
-            - flex-col: Empilha as barras verticalmente em telas pequenas (mobile-first).
-            - md:flex-row: Alinha as barras horizontalmente em telas médias e maiores.
-            - gap-8 / md:gap-16: Ajusta o espaçamento para cada layout.
-        */}
         <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 mt-10 bg-blue-50 rounded-xl p-6 shadow-md">
           {[
             { label: "Ativas", color: "bg-green-500", count: statusCounts.ativas },
@@ -81,7 +81,6 @@ export default function Home() {
         </div>
 
         {/* Totais */}
-        {/* ALTERAÇÃO: Adicionado max-w-md para melhorar a legibilidade em telas muito largas */}
         <div className="mt-10 max-w-md mx-auto">
           <h2 className="font-bold text-lg mb-4 text-center md:text-left">Totais</h2>
           <div className="flex flex-col gap-6">
@@ -104,13 +103,7 @@ export default function Home() {
         </div>
 
         {/* Botões */}
-        {/* ALTERAÇÃO: 
-            - flex-col: Empilha os botões em telas pequenas.
-            - md:flex-row: Alinha horizontalmente a partir de telas médias.
-            - gap-4: Espaçamento menor para o layout de coluna.
-        */}
         <div className="mt-10 flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6">
-          {/* ALTERAÇÃO: w-full e md:w-auto para os botões ocuparem toda a largura no mobile */}
           <Link to="/cadastrar-maquina" className="w-full md:w-auto">
             <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full text-lg">
               Cadastrar Máquina

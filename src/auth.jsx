@@ -1,5 +1,8 @@
 // src/auth.jsx
-export const getToken = () => localStorage.getItem("token");
+const TOKEN_KEY = "userToken";
+const LOGIN_KEY = "loginUsuario";
+
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
 
 export const isAuthenticated = () => {
   const token = getToken();
@@ -7,15 +10,18 @@ export const isAuthenticated = () => {
 
   try {
     const [, payload] = token.split(".");
+    // atob() decodifica Base64
     const decoded = JSON.parse(atob(payload));
     const now = Math.floor(Date.now() / 1000);
-    return decoded.exp > now;
+    
+    // Verifica se a data de expiração (exp) é maior que o tempo atual
+    return decoded.exp > now; 
   } catch {
+    // Se a decodificação falhar (token malformado)
     return false;
   }
 };
 
-// 🔹 Nova função para extrair o nome (subject) do JWT
 export const getUsernameFromToken = () => {
   const token = getToken();
   if (!token) return null;
@@ -23,14 +29,15 @@ export const getUsernameFromToken = () => {
   try {
     const [, payload] = token.split(".");
     const decoded = JSON.parse(atob(payload));
-    // No seu backend, o TokenService usa .withSubject(administrador.getUsername())
-    return decoded.sub || decoded.username || decoded.login;
+    return decoded.sub || null; 
   } catch {
     return null;
   }
 };
 
 export const logout = () => {
-  localStorage.removeItem("token");
+  // 💡 Limpa as chaves corretas
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(LOGIN_KEY); 
   window.location.href = "/login";
 };

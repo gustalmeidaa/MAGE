@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 // Importações para o PDF
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import api from "../api"; 
 
-export default function Movimentacoes() {
+export default function Movimentacoes() { // Mantém o nome da função Movimentacoes, mas se refere a Manutenções
   const [manutencoes, setManutencoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState({
@@ -19,10 +21,10 @@ export default function Movimentacoes() {
     const fetchManutencoes = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/manutencoes`
-        );
-        const data = await response.json();
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
+        const response = await api.get("/manutencoes");
+        // Com Axios, os dados estão em response.data
+        const data = response.data; 
 
         const dataArray = data || [];
         // Ordena por ID crescente
@@ -45,16 +47,14 @@ export default function Movimentacoes() {
     let dataFiltroFormatada = "";
     if (filtro.data) {
       try {
-        dataFiltroFormatada = new Date(filtro.data).toLocaleDateString("pt-BR", {
-          timeZone: "UTC",
-        });
+        const dataObj = new Date(filtro.data);
+        dataFiltroFormatada = dataObj.toISOString().split('T')[0];
       } catch (e) {
         /* Data inválida, ignora filtro */
       }
     }
-    const dataMovFormatada = new Date(mov.data).toLocaleDateString("pt-BR", {
-      timeZone: "UTC",
-    });
+    
+    const dataMovFormatada = new Date(mov.data).toISOString().split('T')[0];
 
     return (
       (filtro.id
@@ -116,7 +116,7 @@ export default function Movimentacoes() {
     link.click();
   };
 
-  // --- FUNÇÃO DE EXPORTAR PDF ADICIONADA ---
+  // FUNÇÃO DE EXPORTAR PDF
   const handleExportPDF = () => {
     if (filtrados.length === 0) {
       alert("Nenhum dado para exportar.");
@@ -154,7 +154,6 @@ export default function Movimentacoes() {
           doc.setFontSize(18);
           doc.text("Relatório de Manutenções", data.settings.margin.left, 15);
         },
-        // Estilo para que a coluna 'Procedimento' possa quebrar linha
         columnStyles: {
           5: { cellWidth: 'wrap' } 
         }
@@ -166,8 +165,7 @@ export default function Movimentacoes() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
-  // --- FIM DA FUNÇÃO ---
-
+  
   if (loading)
     return <p className="p-6 text-gray-600">Carregando manutenções...</p>;
 
@@ -176,10 +174,9 @@ export default function Movimentacoes() {
       {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-3">
         <h2 className="text-2xl font-bold text-gray-800">
-          Lista de Manutenções
+          Histórico de Manutenções
         </h2>
 
-        {/* --- BOTÕES ATUALIZADOS --- */}
         <div className="flex flex-wrap gap-3">
           <Link to="/registrar-manutencao">
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md transition">
@@ -197,7 +194,6 @@ export default function Movimentacoes() {
           >
             Exportar para CSV 📊
           </button>
-          {/* Botão de PDF adicionado */}
           <button
             onClick={handleExportPDF}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow-md transition"
@@ -205,7 +201,6 @@ export default function Movimentacoes() {
             Exportar para PDF 📄
           </button>
         </div>
-        {/* --- FIM DA ATUALIZAÇÃO --- */}
       </div>
 
       {/* Filtros */}

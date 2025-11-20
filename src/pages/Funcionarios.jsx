@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
 // 2. O plugin da tabela (NECESSÁRIO)
 import "jspdf-autotable";
+// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import api from "../api"; 
 
 export default function Funcionarios() {
   const [dados, setDados] = useState([]);
@@ -15,10 +17,9 @@ export default function Funcionarios() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/funcionarios`
-        );
-        const data = await response.json();
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
+        const response = await api.get("/funcionarios");
+        const data = response.data; // Com Axios, os dados estão em response.data
 
         const dataArray = data || [];
         const sortedData = dataArray.sort(
@@ -67,7 +68,7 @@ export default function Funcionarios() {
     link.click();
   };
 
-  // --- FUNÇÃO DE EXPORTAR PDF ADICIONADA ---
+  // FUNÇÃO DE EXPORTAR PDF
   const handleExportPDF = () => {
     if (filtrados.length === 0) {
       alert("Nenhum dado para exportar.");
@@ -102,7 +103,6 @@ export default function Funcionarios() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
-  // --- FIM DA FUNÇÃO ---
 
   const filtrados = dados.filter(
     (f) =>
@@ -121,7 +121,7 @@ export default function Funcionarios() {
           Lista de Funcionários
         </h2>
 
-        {/* --- BOTÕES ATUALIZADOS --- */}
+        {/* BOTÕES */}
         <div className="flex flex-wrap gap-3">
           <Link to="/cadastrar-funcionario">
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md transition">
@@ -134,7 +134,6 @@ export default function Funcionarios() {
           >
             Exportar para CSV 📊
           </button>
-          {/* Botão duplicado removido e substituído pelo de PDF */}
           <button
             onClick={handleExportPDF}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow-md transition"
@@ -142,7 +141,7 @@ export default function Funcionarios() {
             Exportar para PDF 📄
           </button>
         </div>
-        {/* --- FIM DA ATUALIZAÇÃO --- */}
+        {/* FIM DOS BOTÕES */}
       </div>
 
       {/* Filtros */}

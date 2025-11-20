@@ -1,36 +1,35 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Link } from "react-router-dom"; // Link não é usado, mas mantive o import
+import { Link } from "react-router-dom"; 
+import api from "../api"; 
 
 export default function CadastroMaquina() {
   const [funcionarios, setFuncionarios] = useState([]);
-  const [sucesso, setSucesso] = useState(null); // Mensagem de sucesso
+  const [sucesso, setSucesso] = useState(null); 
+  const [erro, setErro] = useState(null); // Adicionando estado para erros
 
-  // ALTERAÇÃO: Estado para gerenciar os dados do formulário
   const [formData, setFormData] = useState({
     codPatrimonial: "",
     numSerie: "",
     valor: "",
     idResponsavel: "",
     localizacao: "",
-    status: "ATIVA", // Valor inicial padrão
+    status: "ATIVA", 
   });
 
   useEffect(() => {
     const fetchFuncionarios = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/funcionarios`
-        );
+        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
+        const response = await api.get("/funcionarios");
         setFuncionarios(response.data);
       } catch (error) {
         console.error("Erro ao buscar funcionários:", error);
+        setErro("Erro ao carregar lista de funcionários.");
       }
     };
     fetchFuncionarios();
   }, []);
 
-  // ALTERAÇÃO: Função para lidar com mudanças nos campos do formulário
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -41,11 +40,13 @@ export default function CadastroMaquina() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setSucesso(null);
+    setErro(null);
 
     try {
-      // ALTERAÇÃO: Enviando os dados do estado 'formData'
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/maquinas`,
+      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
+      await api.post(
+        "/maquinas",
         {...formData, idResponsavel: formData.idResponsavel || null}
       );
       
@@ -60,12 +61,15 @@ export default function CadastroMaquina() {
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao cadastrar máquina:", error);
+      // Tratamento de erro mais específico
+      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar cadastrar a máquina.";
+      setErro(msgErro);
+      setTimeout(() => setErro(null), 5000);
     }
   };
 
   return (
     <>
-      {/* ALTERAÇÃO: Título responsivo */}
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         Cadastrar Máquina
       </h1>
@@ -76,12 +80,16 @@ export default function CadastroMaquina() {
         </div>
       )}
 
+      {erro && (
+        <div className="max-w-md mx-auto mb-8 p-4 bg-red-100 border border-red-400 rounded-lg text-red-700 shadow-md animate-fade-in">
+          {erro}
+        </div>
+      )}
+
       <form
         className="max-w-2xl mx-auto space-y-6 text-base"
         onSubmit={handleSubmit}
       >
-        {/* Exemplo de um campo responsivo */}
-        {/* ALTERAÇÃO: flex-col no mobile, md:flex-row no desktop */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <label className="font-semibold" htmlFor="codPatrimonial">
             Código de patrimônio:
@@ -90,7 +98,6 @@ export default function CadastroMaquina() {
             id="codPatrimonial"
             name="codPatrimonial"
             type="text"
-            // ALTERAÇÃO: w-full no mobile, md:w-72 no desktop
             className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
             value={formData.codPatrimonial}
             onChange={handleChange}
@@ -184,7 +191,6 @@ export default function CadastroMaquina() {
         <div className="flex justify-center pt-4">
           <button
             type="submit"
-            // ALTERAÇÃO: Botão com largura total no mobile e automático no desktop
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
             Cadastrar
@@ -192,7 +198,6 @@ export default function CadastroMaquina() {
         </div>
       </form>
 
-      {/* Animação CSS (sem alterações) */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }

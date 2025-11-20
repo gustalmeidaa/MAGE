@@ -1,5 +1,3 @@
-// api.js
-
 import axios from "axios";
 // 💡 Importa as funções do arquivo de serviço de autenticação
 import { getToken, logout } from "./auth"; 

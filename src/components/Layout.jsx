@@ -83,6 +83,9 @@ export default function Layout() {
           <Link to="/setores" className="text-white hover:text-gray-300" onClick={handleLinkClick}>
             Setores
           </Link>
+          <Link to="/cadastrar-administrador" className="text-white hover:text-gray-300" onClick={handleLinkClick}>
+            Cadastrar Administrador
+          </Link>
         </nav>
       </aside>
 

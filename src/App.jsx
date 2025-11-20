@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import Setor from "./pages/Setor";
 import CadastroSetor from "./pages/CadastroSetor";
 import ProtectedRoute from "./ProtectedRoute";
+import CadastrarAdministrador from "./pages/CadastrarAdministrador";
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="manutencoes" element={<Manutencoes />} />
           <Route path="setores" element={<Setor />} />
           <Route path="cadastrar-setor" element={<CadastroSetor />} />
+          <Route path="cadastrar-administrador" element={<CadastrarAdministrador />} />
         </Route>
 
         {/* Rota pública (login) */}

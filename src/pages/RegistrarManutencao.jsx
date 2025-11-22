@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import { useSearchParams } from "react-router-dom"; // 💡 Adicionado useSearchParams
 import api from "../api"; 
 
 export default function RegistrarManutencao() {
+  const [searchParams] = useSearchParams();
+  const idHistorico = searchParams.get("id"); // Captura o ID da manutenção na URL
+  
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
   const [sucesso, setSucesso] = useState(null);
-  const [erro, setErro] = useState(null); // Estado para gerenciar erros
+  const [erro, setErro] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // O modo Edição é determinado pela presença do ID na URL
+  const isEditing = !!idHistorico; 
 
   const [formData, setFormData] = useState({
     data: "",
@@ -17,24 +24,53 @@ export default function RegistrarManutencao() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      setErro(null);
-      try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT nas requisições
-        const [resMaquinas, resFuncionarios] = await Promise.all([
-          api.get("/maquinas"),
-          api.get("/funcionarios"),
-        ]);
-        setMaquinas(resMaquinas.data);
-        setFuncionarios(resFuncionarios.data);
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-        setErro("Não foi possível carregar a lista de máquinas e funcionários.");
-      }
-    };
-
     fetchData();
-  }, []);
+  }, [idHistorico]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setErro(null);
+    setSucesso(null);
+
+    try {
+      // 1. Busca Funcionários e Máquinas
+      const [resMaquinas, resFuncionarios] = await Promise.all([
+        api.get("/maquinas"),
+        api.get("/funcionarios"),
+      ]);
+      setMaquinas(resMaquinas.data || []);
+      setFuncionarios(resFuncionarios.data || []);
+      
+      // 2. Se houver ID, busca os dados da manutenção para edição
+      if (idHistorico) {
+        const resManutencao = await api.get(`/manutencoes/${idHistorico}`); // Assume que a rota GET /manutencoes/{id} existe
+        const dadosManutencao = resManutencao.data;
+
+        // Formata a data e preenche o formulário
+        const dataFormatada = new Date(dadosManutencao.data).toISOString().substring(0, 16);
+
+        setFormData({
+            data: dataFormatada || "",
+            // Garante que o ID é string para o select
+            idMaquina: dadosManutencao.idMaquina?.idMaquina?.toString() || "",
+            idFuncionario: dadosManutencao.idFuncionario?.idFuncionario?.toString() || "",
+            tipoManutencao: dadosManutencao.tipoManutencao || "preventiva",
+            procedimentos: dadosManutencao.procedimentos || "",
+        });
+      }
+
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      const statusCode = error.response?.status;
+      if (isEditing) {
+          setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}.`);
+      } else {
+          setErro("Erro ao carregar listas de seleção.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,30 +85,47 @@ export default function RegistrarManutencao() {
     setSucesso(null);
     setErro(null);
 
+    // Converte os IDs de volta para Number ou null
+    const payload = {
+        ...formData,
+        idMaquina: formData.idMaquina ? parseInt(formData.idMaquina) : null,
+        idFuncionario: formData.idFuncionario ? parseInt(formData.idFuncionario) : null,
+    };
+    
     try {
-      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
-      await api.post("/manutencoes", formData);
-      setSucesso("Manutenção registrada com sucesso!");
-      
-      // Limpa o formulário resetando o estado
-      setFormData({
-        data: "", idMaquina: "", idFuncionario: "",
-        tipoManutencao: "preventiva", procedimentos: "",
-      });
+      if (isEditing) {
+        // MODO EDIÇÃO (PUT)
+        await api.put(`/manutencoes/${idHistorico}`, payload); // Assume que a rota PUT /manutencoes/{id} existe
+        setSucesso("Manutenção atualizada com sucesso!");
+      } else {
+        // MODO CADASTRO (POST)
+        await api.post("/manutencoes", payload);
+        setSucesso("Manutenção registrada com sucesso!");
+        
+        // Limpa o formulário após o cadastro
+        setFormData({
+            data: "", idMaquina: "", idFuncionario: "",
+            tipoManutencao: "preventiva", procedimentos: "",
+        });
+      }
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
-      console.error("Erro ao registrar manutenção:", error);
-      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar registrar a manutenção.";
+      console.error("Erro ao salvar manutenção:", error);
+      const msgErro = error.response?.data?.message || `Falha ao ${isEditing ? 'atualizar' : 'registrar'} a manutenção.`;
       setErro(msgErro);
       setTimeout(() => setErro(null), 5000);
     }
   };
+  
+  if (loading) {
+    return <p className="p-6 text-gray-600">Carregando dados...</p>;
+  }
 
   return (
     <>
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        Registrar Manutenção
+        {isEditing ? "Editar Manutenção" : "Registrar Manutenção"}
       </h1>
 
       {sucesso && (
@@ -183,7 +236,7 @@ export default function RegistrarManutencao() {
             type="submit"
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
-            Registrar
+            {isEditing ? "Salvar Edição" : "Registrar"}
           </button>
         </div>
       </form>

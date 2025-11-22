@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-// Importações para PDF
+import { Link, useNavigate } from "react-router-dom"; // Importado useNavigate
+// Importações para o PDF
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
+// Importa a instância configurada do Axios (api) que anexa o token
 import api from "../api"; 
 
 export default function Movimentacoes() {
   const [movimentacoes, setMovimentacoes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // Inicializa useNavigate
+  
   const [filtro, setFiltro] = useState({
     id: "",
     data: "",
@@ -19,35 +21,32 @@ export default function Movimentacoes() {
   });
 
   useEffect(() => {
-    const fetchMovimentacoes = async () => {
-      setLoading(true);
-      try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
-        const response = await api.get("/movimentacoes");
-        const data = response.data;
-        
-        // Garante que é um array e ordena por ID
-        const dataArray = data || [];
-        const sortedData = dataArray.sort(
-          (a, b) => a.idMovimentacoes - b.idMovimentacoes
-        );
-
-        setMovimentacoes(sortedData);
-      } catch (error) {
-        console.error("Erro ao buscar movimentações:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMovimentacoes();
   }, []);
+
+  const fetchMovimentacoes = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/movimentacoes");
+      const data = response.data;
+      
+      const dataArray = data || [];
+      const sortedData = dataArray.sort(
+        (a, b) => a.idMovimentacoes - b.idMovimentacoes
+      );
+
+      setMovimentacoes(sortedData);
+    } catch (error) {
+      console.error("Erro ao buscar movimentações:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtrados = movimentacoes.filter((mov) => {
     let dataFiltroFormatada = "";
     if (filtro.data) {
       try {
-        // Usa o formato AAAA-MM-DD para comparação precisa no filtro de data
         const dataObj = new Date(filtro.data);
         dataFiltroFormatada = dataObj.toISOString().split('T')[0];
       } catch (e) {
@@ -76,6 +75,32 @@ export default function Movimentacoes() {
         : true)
     );
   });
+  
+  // FUNÇÕES DE AÇÃO
+
+  const handleEditar = (idMovimentacao) => {
+      // Redireciona para a página de registro de movimentação com o ID para edição
+      navigate(`/registrar-movimentacao?id=${idMovimentacao}`); // Assume que a rota de edição é /registrar-movimentacao
+  };
+
+  const handleExcluir = async (idMovimentacao) => {
+      if (!window.confirm(`Tem certeza que deseja excluir a movimentação ID ${idMovimentacao}?`))
+        return;
+
+      try {
+        // Assume que a rota de delete é /movimentacoes/{id}
+        await api.delete(`/movimentacoes/${idMovimentacao}`);
+        
+        // Atualiza a lista removendo o item
+        setMovimentacoes((prev) =>
+          prev.filter((item) => item.idMovimentacoes !== idMovimentacao)
+        );
+        alert("Movimentação excluída com sucesso!");
+      } catch (error) {
+        console.error("Erro ao excluir movimentação:", error.response || error);
+        alert("Erro ao excluir a movimentação.");
+      }
+  };
 
   const handleExportCSV = () => {
     if (filtrados.length === 0) {
@@ -108,7 +133,6 @@ export default function Movimentacoes() {
     link.click();
   };
 
-  // FUNÇÃO DE EXPORTAR PDF
   const handleExportPDF = () => {
     if (filtrados.length === 0) {
       alert("Nenhum dado para exportar.");
@@ -277,6 +301,7 @@ export default function Movimentacoes() {
                 <th className="px-4 py-2 border text-left">Tipo</th>
                 <th className="px-4 py-2 border text-left">Origem</th>
                 <th className="px-4 py-2 border text-left">Destino</th>
+                <th className="px-4 py-2 border text-center">Ações</th> {/* Nova Coluna */}
               </tr>
             </thead>
 
@@ -296,6 +321,21 @@ export default function Movimentacoes() {
                   <td className="border px-4 py-2">{mov.tipo || "-"}</td>
                   <td className="border px-4 py-2">{mov.origem || "-"}</td>
                   <td className="border px-4 py-2">{mov.destino || "-"}</td>
+                  {/* Botões de Ação na Tabela */}
+                  <td className="border px-4 py-2 text-center space-x-2">
+                    <button
+                      onClick={() => handleEditar(mov.idMovimentacoes)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleExcluir(mov.idMovimentacoes)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md"
+                    >
+                      Excluir
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -327,6 +367,21 @@ export default function Movimentacoes() {
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Destino:</span>
                   <span>{mov.destino || "-"}</span>
+                </div>
+                {/* Botões de Ação no Mobile */}
+                <div className="flex justify-end mt-3 gap-2">
+                    <button
+                        onClick={() => handleEditar(mov.idMovimentacoes)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                        Editar
+                    </button>
+                    <button
+                        onClick={() => handleExcluir(mov.idMovimentacoes)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                        Excluir
+                    </button>
                 </div>
               </div>
             ))}

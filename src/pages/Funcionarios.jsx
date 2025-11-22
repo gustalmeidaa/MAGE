@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 // 1. A importação principal do jsPDF
 import jsPDF from "jspdf";
 // 2. O plugin da tabela (NECESSÁRIO)
 import "jspdf-autotable";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
+// Importa a instância configurada do Axios (api) que anexa o token
 import api from "../api"; 
 
 export default function Funcionarios() {
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState({ id: "", nome: "" });
+  const navigate = useNavigate();
 
   // Fetch data from the API
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
         const response = await api.get("/funcionarios");
-        const data = response.data; // Com Axios, os dados estão em response.data
+        const data = response.data;
 
         const dataArray = data || [];
         const sortedData = dataArray.sort(
@@ -30,6 +30,7 @@ export default function Funcionarios() {
           id: funcionario.idFuncionario.toString(),
           nome: funcionario.nomeFuncionario,
           setor: funcionario.setor?.nomeSetor || "N/A",
+          idFuncionario: funcionario.idFuncionario, // Mantém o ID original para edição/exclusão
         }));
 
         setDados(mappedData);
@@ -42,6 +43,29 @@ export default function Funcionarios() {
 
     fetchData();
   }, []);
+
+  // FUNÇÕES DE AÇÃO
+  const handleEditar = (idFuncionario) => {
+    navigate(`/cadastrar-funcionario?id=${idFuncionario}`);
+  };
+
+  const handleExcluir = async (idFuncionario) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o funcionário ID ${idFuncionario}?`))
+      return;
+
+    try {
+      await api.delete(`/funcionarios/${idFuncionario}`);
+      
+      // Atualiza a lista removendo o item
+      setDados((prev) =>
+        prev.filter((item) => item.idFuncionario !== idFuncionario)
+      );
+      alert("Funcionário excluído com sucesso!");
+    } catch (error) {
+      console.error("Erro ao excluir funcionário:", error.response || error);
+      alert("Erro ao excluir o funcionário. Verifique se há máquinas associadas.");
+    }
+  };
 
   // Função de exportar CSV
   const handleExportCSV = () => {
@@ -183,6 +207,7 @@ export default function Funcionarios() {
                 <th className="px-4 py-2 border text-left">ID</th>
                 <th className="px-4 py-2 border text-left">Nome</th>
                 <th className="px-4 py-2 border text-left">Setor</th>
+                <th className="px-4 py-2 border text-center">Ações</th> {/* Nova Coluna */}
               </tr>
             </thead>
             <tbody>
@@ -191,6 +216,21 @@ export default function Funcionarios() {
                   <td className="border px-4 py-2">{func.id}</td>
                   <td className="border px-4 py-2">{func.nome}</td>
                   <td className="border px-4 py-2">{func.setor}</td>
+                  {/* Botões de Ação na Tabela */}
+                  <td className="border px-4 py-2 text-center space-x-2">
+                    <button
+                      onClick={() => handleEditar(func.idFuncionario)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleExcluir(func.idFuncionario)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md"
+                    >
+                      Excluir
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -214,6 +254,21 @@ export default function Funcionarios() {
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Setor:</span>
                   <span>{func.setor}</span>
+                </div>
+                {/* Botões de Ação no Mobile */}
+                <div className="flex justify-end mt-3 gap-2">
+                    <button
+                      onClick={() => handleEditar(func.idFuncionario)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleExcluir(func.idFuncionario)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                      Excluir
+                    </button>
                 </div>
               </div>
             ))}

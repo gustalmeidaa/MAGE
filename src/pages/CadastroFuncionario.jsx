@@ -1,36 +1,64 @@
 import React, { useState, useEffect } from "react";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import { useSearchParams } from "react-router-dom"; 
 import api from "../api"; 
 
 export default function CadastroFuncionario() {
+  const [searchParams] = useSearchParams();
+  const idFuncionario = searchParams.get("id"); // Captura o ID do funcionário na URL
+  
   const [setores, setSetores] = useState([]);
   const [sucesso, setSucesso] = useState(null);
-  const [erro, setErro] = useState(null); // Estado para gerenciar erros
+  const [erro, setErro] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Estado para gerenciar os dados do formulário
+  const isEditing = !!idFuncionario; 
+
   const [formData, setFormData] = useState({
     nomeFuncionario: "",
-    nomeSetor: "",
+    nomeSetor: "", // Armazena o nome do setor
   });
 
   useEffect(() => {
-    // Apenas a busca de setores é necessária para este formulário
-    const fetchSetores = async () => {
-      setErro(null);
-      try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
-        const response = await api.get("/setores");
-        setSetores(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar setores:", error);
-        setErro("Não foi possível carregar a lista de setores.");
+    fetchData();
+  }, [idFuncionario]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setErro(null);
+    setSucesso(null);
+
+    try {
+      // 1. Busca Setores
+      const resSetores = await api.get("/setores");
+      setSetores(resSetores.data || []);
+
+      // 2. Se houver ID, busca os dados do funcionário para edição
+      if (idFuncionario) {
+        // Assume que a rota GET /funcionarios/{id} existe
+        const resFuncionario = await api.get(`/funcionarios/${idFuncionario}`); 
+        const dadosFuncionario = resFuncionario.data;
+
+        // Preenche o estado do formulário
+        setFormData({
+            nomeFuncionario: dadosFuncionario.nomeFuncionario || "",
+            // Pega o nome do setor do objeto aninhado
+            nomeSetor: dadosFuncionario.setor?.nomeSetor || "", 
+        });
       }
-    };
 
-    fetchSetores();
-  }, []);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      const statusCode = error.response?.status;
+      if (isEditing) {
+          setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}.`);
+      } else {
+          setErro("Erro ao carregar lista de setores.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Função genérica para lidar com mudanças nos campos
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -44,32 +72,44 @@ export default function CadastroFuncionario() {
     setSucesso(null);
     setErro(null);
 
+    const payload = {
+        // ESSENCIAL: Garante que o ID está no corpo para o PUT
+        idFuncionario: isEditing ? parseInt(idFuncionario) : undefined, 
+        ...formData,
+        nomeSetor: formData.nomeSetor || null,
+    };
+
     try {
-      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
-      await api.post(
-        "/funcionarios",
-        {...formData, nomeSetor: formData.nomeSetor || null } // Garante que valor nulo seja enviado se nada for selecionado
-      );
-      setSucesso("Funcionário cadastrado com sucesso!");
-      
-      // Limpa o formulário resetando o estado
-      setFormData({ nomeFuncionario: "", nomeSetor: "" });
+      if (isEditing) {
+        // MODO EDIÇÃO (PUT)
+        await api.put(`/funcionarios/${idFuncionario}`, payload);
+        setSucesso("Funcionário atualizado com sucesso!");
+      } else {
+        // MODO CADASTRO (POST)
+        await api.post("/funcionarios", payload);
+        setSucesso("Funcionário cadastrado com sucesso!");
+        
+        // Limpa o formulário após o cadastro
+        setFormData({ nomeFuncionario: "", nomeSetor: "" });
+      }
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
-      console.error("Erro ao cadastrar funcionário:", error);
-      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar cadastrar o funcionário.";
+      console.error("Erro ao salvar funcionário:", error);
+      const msgErro = error.response?.data?.message || `Falha ao ${isEditing ? 'atualizar' : 'cadastrar'} o funcionário.`;
       setErro(msgErro);
       setTimeout(() => setErro(null), 5000);
     }
   };
 
+  if (loading) {
+    return <p className="p-6 text-gray-600">Carregando dados...</p>;
+  }
+
   return (
-    // O componente pai (Layout) já fornece o container, então usamos um Fragment <>
     <>
-      {/* Título responsivo */}
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        Cadastrar Funcionário
+        {isEditing ? "Editar Funcionário" : "Cadastrar Funcionário"}
       </h1>
 
       {sucesso && (
@@ -85,7 +125,7 @@ export default function CadastroFuncionario() {
       )}
 
       <form className="max-w-2xl mx-auto space-y-6 text-base" onSubmit={handleSubmit}>
-        {/* Layout de linha responsivo (coluna no mobile, linha no desktop) */}
+        
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <label className="font-semibold" htmlFor="nomeFuncionario">
             Nome do funcionário:
@@ -94,7 +134,6 @@ export default function CadastroFuncionario() {
             id="nomeFuncionario"
             name="nomeFuncionario"
             type="text"
-            // Largura responsiva (total no mobile, fixa no desktop)
             className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
             value={formData.nomeFuncionario}
             onChange={handleChange}
@@ -126,10 +165,9 @@ export default function CadastroFuncionario() {
         <div className="flex justify-center pt-4">
           <button
             type="submit"
-            // Botão com largura responsiva
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
-            Cadastrar
+            {isEditing ? "Salvar Edição" : "Cadastrar"}
           </button>
         </div>
       </form>

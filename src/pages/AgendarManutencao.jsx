@@ -1,38 +1,71 @@
 import React, { useState, useEffect } from "react";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import { useSearchParams } from "react-router-dom"; // 💡 Adicionado useSearchParams
 import api from "../api"; 
 
 export default function AgendarManutencao() {
+  const [searchParams] = useSearchParams();
+  const idAgendamento = searchParams.get("id"); // Captura o ID do agendamento na URL
+  
   const [maquinas, setMaquinas] = useState([]);
   const [sucesso, setSucesso] = useState(null);
-  const [erro, setErro] = useState(null); // Estado para gerenciar erros
+  const [erro, setErro] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const isEditing = !!idAgendamento; // Define se estamos no modo edição
 
-  // Estado do formulário para corresponder ao modelo ManutencaoAgendada
   const [formData, setFormData] = useState({
     dataAgendada: "",
     idMaquina: "",
-    tipoManutencao: "preventiva", // Valor padrão
+    tipoManutencao: "preventiva",
     procedimentos: "",
   });
 
   useEffect(() => {
-    // Busca apenas as máquinas
-    const fetchMaquinas = async () => {
-      setErro(null);
-      try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
-        const resMaquinas = await api.get("/maquinas");
-        setMaquinas(resMaquinas.data);
-      } catch (error) {
-        console.error("Erro ao buscar máquinas:", error);
-        setErro("Não foi possível carregar a lista de máquinas.");
+    fetchData();
+  }, [idAgendamento]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setErro(null);
+    setSucesso(null);
+
+    try {
+      // 1. Busca Máquinas (necessário para o select)
+      const resMaquinas = await api.get("/maquinas");
+      setMaquinas(resMaquinas.data || []);
+      
+      // 2. Se houver ID, busca os dados do agendamento para edição
+      if (idAgendamento) {
+        // Assume que a rota GET /manutencoes-agendadas/{id} existe
+        const resAgendamento = await api.get(`/manutencoes-agendadas/${idAgendamento}`); 
+        const dadosAgendamento = resAgendamento.data;
+
+        // Formata a data para preencher o input datetime-local
+        const dataFormatada = new Date(dadosAgendamento.dataAgendada).toISOString().substring(0, 16);
+
+        // Preenche o estado do formulário
+        setFormData({
+            dataAgendada: dataFormatada || "",
+            // Garante que o ID da máquina é string para o select
+            idMaquina: dadosAgendamento.maquina?.idMaquina?.toString() || "", 
+            tipoManutencao: dadosAgendamento.tipoManutencao || "preventiva",
+            procedimentos: dadosAgendamento.procedimentos || "",
+        });
       }
-    };
 
-    fetchMaquinas();
-  }, []);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      const statusCode = error.response?.status;
+      if (isEditing) {
+          setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}.`);
+      } else {
+          setErro("Erro ao carregar lista de máquinas.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Função genérica para lidar com mudanças nos campos
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -46,32 +79,48 @@ export default function AgendarManutencao() {
     setSucesso(null);
     setErro(null);
 
+    const payload = {
+        // Envia o ID no corpo apenas se estiver editando (alguns backends exigem)
+        idManutencaoAgendada: isEditing ? parseInt(idAgendamento) : undefined,
+        ...formData,
+        // Converte o ID da Máquina para Number
+        idMaquina: formData.idMaquina ? parseInt(formData.idMaquina) : null,
+    };
+    
     try {
-      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
-      // Endpoint para agendamento e envio do novo 'formData'
-      await api.post("/manutencoes-agendadas", formData);
-      setSucesso("Manutenção agendada com sucesso!");
-      
-      // Limpa o formulário resetando o estado para a nova estrutura
-      setFormData({
-        dataAgendada: "", idMaquina: "", 
-        tipoManutencao: "preventiva", procedimentos: "",
-      });
+      if (isEditing) {
+        // MODO EDIÇÃO (PUT)
+        await api.put(`/manutencoes-agendadas/${idAgendamento}`, payload);
+        setSucesso("Manutenção agendada atualizada com sucesso!");
+      } else {
+        // MODO CADASTRO (POST)
+        await api.post("/manutencoes-agendadas", payload);
+        setSucesso("Manutenção agendada com sucesso!");
+        
+        // Limpa o formulário após o cadastro
+        setFormData({
+            dataAgendada: "", idMaquina: "", 
+            tipoManutencao: "preventiva", procedimentos: "",
+        });
+      }
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
-      console.error("Erro ao agendar manutenção:", error);
-      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar agendar a manutenção.";
+      console.error("Erro ao salvar agendamento:", error);
+      const msgErro = error.response?.data?.message || `Falha ao ${isEditing ? 'atualizar' : 'agendar'} a manutenção.`;
       setErro(msgErro);
       setTimeout(() => setErro(null), 5000);
     }
   };
 
+  if (loading) {
+    return <p className="p-6 text-gray-600">Carregando dados...</p>;
+  }
+
   return (
     <>
-      {/* Título da página */}
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        Agendar Manutenção
+        {isEditing ? "Editar Agendamento" : "Agendar Manutenção"}
       </h1>
 
       {sucesso && (
@@ -166,7 +215,7 @@ export default function AgendarManutencao() {
             type="submit"
             className="w-full max-w-xs md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
-            Agendar
+            {isEditing ? "Salvar Edição" : "Agendar"}
           </button>
         </div>
       </form>

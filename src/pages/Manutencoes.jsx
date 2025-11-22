@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // 💡 Adicionado useNavigate
 // Importações para o PDF
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
+// Importa a instância configurada do Axios (api) que anexa o token
 import api from "../api"; 
 
-export default function Movimentacoes() { // Mantém o nome da função Movimentacoes, mas se refere a Manutenções
+export default function Movimentacoes() {
   const [manutencoes, setManutencoes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // 💡 Inicializa useNavigate
+  
   const [filtro, setFiltro] = useState({
     id: "",
     data: "",
@@ -18,30 +20,27 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
   });
 
   useEffect(() => {
-    const fetchManutencoes = async () => {
-      setLoading(true);
-      try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
-        const response = await api.get("/manutencoes");
-        // Com Axios, os dados estão em response.data
-        const data = response.data; 
-
-        const dataArray = data || [];
-        // Ordena por ID crescente
-        const sortedData = dataArray.sort(
-          (a, b) => a.idHistoricoManutencoes - b.idHistoricoManutencoes
-        );
-
-        setManutencoes(sortedData);
-      } catch (error) {
-        console.error("Erro ao buscar manutenções:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchManutencoes();
   }, []);
+
+  const fetchManutencoes = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/manutencoes");
+      const data = response.data; 
+
+      const dataArray = data || [];
+      const sortedData = dataArray.sort(
+        (a, b) => a.idHistoricoManutencoes - b.idHistoricoManutencoes
+      );
+
+      setManutencoes(sortedData);
+    } catch (error) {
+      console.error("Erro ao buscar manutenções:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtrados = manutencoes.filter((mov) => {
     let dataFiltroFormatada = "";
@@ -74,8 +73,35 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
         : true)
     );
   });
+  
+  // --- FUNÇÕES DE AÇÃO ---
+  
+  const handleEditar = (idManutencao) => {
+      // Redireciona para a página de registro com o ID para edição
+      navigate(`/registrar-manutencao?id=${idManutencao}`);
+  };
 
-  // Função de exportar CSV
+  const handleExcluir = async (idManutencao) => {
+      if (!window.confirm(`Tem certeza que deseja excluir o histórico de manutenção ID ${idManutencao}?`))
+        return;
+
+      try {
+        // Assume que a rota de delete é /manutencoes/{id}
+        await api.delete(`/manutencoes/${idManutencao}`);
+        
+        // Atualiza a lista removendo o item
+        setManutencoes((prev) =>
+          prev.filter((item) => item.idHistoricoManutencoes !== idManutencao)
+        );
+        alert("Manutenção excluída com sucesso!");
+      } catch (error) {
+        console.error("Erro ao excluir manutenção:", error.response || error);
+        alert("Erro ao excluir a manutenção.");
+      }
+  };
+  
+  // --- FUNÇÕES DE EXPORTAÇÃO ---
+
   const handleExportCSV = () => {
     if (filtrados.length === 0) {
       alert("Não há dados para exportar.");
@@ -83,12 +109,7 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
     }
 
     const headers = [
-      "ID",
-      "Data",
-      "Tipo",
-      "ID Máquina",
-      "Responsável",
-      "Procedimento",
+      "ID", "Data", "Tipo", "ID Máquina", "Responsável", "Procedimento",
     ];
     const csvRows = [headers.join(",")];
 
@@ -116,7 +137,6 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
     link.click();
   };
 
-  // FUNÇÃO DE EXPORTAR PDF
   const handleExportPDF = () => {
     if (filtrados.length === 0) {
       alert("Nenhum dado para exportar.");
@@ -125,12 +145,7 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
     try {
       const doc = new jsPDF();
       const tableColumn = [
-        "ID",
-        "Data",
-        "Tipo",
-        "ID Máquina",
-        "Responsável",
-        "Procedimento",
+        "ID", "Data", "Tipo", "ID Máquina", "Responsável", "Procedimento",
       ];
       const tableRows = [];
 
@@ -278,6 +293,7 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
                 <th className="px-4 py-2 border text-left">ID Máquina</th>
                 <th className="px-4 py-2 border text-left">Responsável</th>
                 <th className="px-4 py-2 border text-left">Procedimento</th>
+                <th className="px-4 py-2 border text-center">Ações</th> {/* 💡 Nova Coluna */}
               </tr>
             </thead>
             <tbody>
@@ -306,6 +322,21 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
                     title={mov.procedimentos}
                   >
                     {mov.procedimentos || "-"}
+                  </td>
+                  {/* 💡 Botões de Ação na Tabela */}
+                  <td className="border px-4 py-2 text-center space-x-2">
+                    <button
+                      onClick={() => handleEditar(mov.idHistoricoManutencoes)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleExcluir(mov.idHistoricoManutencoes)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md"
+                    >
+                      Excluir
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -344,6 +375,21 @@ export default function Movimentacoes() { // Mantém o nome da função Moviment
                   <p className="text-xs mt-1 break-words">
                     {mov.procedimentos || "-"}
                   </p>
+                </div>
+                {/* 💡 Botões de Ação no Mobile */}
+                <div className="flex justify-end mt-3 gap-2">
+                    <button
+                        onClick={() => handleEditar(mov.idHistoricoManutencoes)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                        Editar
+                    </button>
+                    <button
+                        onClick={() => handleExcluir(mov.idHistoricoManutencoes)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                        Excluir
+                    </button>
                 </div>
               </div>
             ))}

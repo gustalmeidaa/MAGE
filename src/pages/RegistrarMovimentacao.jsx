@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
+import { useSearchParams } from "react-router-dom"; 
 import api from "../api"; 
 
 export default function RegistrarMovimentacao() {
+  const [searchParams] = useSearchParams();
+  const idMovimentacao = searchParams.get("id"); // Captura o ID da Movimentação na URL
+  
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
   const [sucesso, setSucesso] = useState(null);
-  const [erro, setErro] = useState(null); // Estado para gerenciar erros
+  const [erro, setErro] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const isEditing = !!idMovimentacao; 
 
   const [formData, setFormData] = useState({
     data: "",
@@ -18,28 +24,59 @@ export default function RegistrarMovimentacao() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      setErro(null);
-      try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT nas requisições
-        const [resMaquinas, resFuncionarios] = await Promise.all([
+    fetchData();
+  }, [idMovimentacao]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setErro(null);
+    setSucesso(null);
+
+    try {
+      // 1. Busca Funcionários e Máquinas
+      const [resMaquinas, resFuncionarios] = await Promise.all([
           api.get("/maquinas"),
           api.get("/funcionarios"),
-        ]);
-        setMaquinas(resMaquinas.data);
-        setFuncionarios(resFuncionarios.data);
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-        setErro("Não foi possível carregar máquinas e funcionários.");
+      ]);
+      setMaquinas(resMaquinas.data || []);
+      setFuncionarios(resFuncionarios.data || []);
+
+      // 2. Se houver ID, busca os dados da movimentação para edição
+      if (idMovimentacao) {
+          // Assume que a rota GET /movimentacoes/{id} existe
+          const resMovimentacao = await api.get(`/movimentacoes/${idMovimentacao}`); 
+          const dadosMovimentacao = resMovimentacao.data;
+
+          // Formata a data para preencher o input datetime-local
+          const dataFormatada = new Date(dadosMovimentacao.data).toISOString().substring(0, 16);
+
+          // Preenche o estado do formulário
+          setFormData({
+              data: dataFormatada || "",
+              idMaquinaMovimentada: dadosMovimentacao.maquinaMovimentada?.idMaquina?.toString() || "", 
+              idResponsavel: dadosMovimentacao.idResponsavel?.toString() || "",
+              tipo: dadosMovimentacao.tipo || "entrada",
+              origem: dadosMovimentacao.origem || "",
+              destino: dadosMovimentacao.destino || "",
+          });
       }
-    };
-    fetchData();
-  }, []);
+
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      const statusCode = error.response?.status;
+      if (isEditing) {
+          setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}. Verifique o token/Role.`);
+      } else {
+          setErro("Erro ao carregar listas de seleção.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Atualiza o estado para o campo que foi alterado
     setFormData(prevState => ({ ...prevState, [name]: value }));
 
     // Lógica especial: se a máquina for alterada, atualiza a origem
@@ -57,33 +94,48 @@ export default function RegistrarMovimentacao() {
     setSucesso(null);
     setErro(null);
 
+    // Converte os IDs de volta para Number ou null e garante que o ID da movimentação esteja no payload para o PUT
+    const payload = {
+        idMovimentacoes: isEditing ? parseInt(idMovimentacao) : undefined,
+        ...formData,
+        idResponsavel: formData.idResponsavel ? parseInt(formData.idResponsavel) : null,
+        idMaquinaMovimentada: formData.idMaquinaMovimentada ? parseInt(formData.idMaquinaMovimentada) : null,
+    };
+
     try {
-      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
-      await api.post("/movimentacoes", {
-          ...formData,
-          idResponsavel: formData.idResponsavel || null
-      });
-      setSucesso("Movimentação registrada com sucesso!");
-      
-      // Limpa o formulário resetando o estado
-      setFormData({
-        data: "", idMaquinaMovimentada: "", idResponsavel: "",
-        tipo: "entrada", origem: "", destino: "",
-      });
+      if (isEditing) {
+        // MODO EDIÇÃO (PUT)
+        await api.put(`/movimentacoes/${idMovimentacao}`, payload);
+        setSucesso("Movimentação atualizada com sucesso!");
+      } else {
+        // MODO CADASTRO (POST)
+        await api.post("/movimentacoes", payload);
+        setSucesso("Movimentação registrada com sucesso!");
+        
+        // Limpa o formulário após o cadastro
+        setFormData({
+          data: "", idMaquinaMovimentada: "", idResponsavel: "",
+          tipo: "entrada", origem: "", destino: "",
+        });
+      }
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
-      console.error("Erro ao registrar movimentação:", error);
-      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar registrar a movimentação.";
+      console.error("Erro ao salvar movimentação:", error);
+      const msgErro = error.response?.data?.message || `Falha ao ${isEditing ? 'atualizar' : 'registrar'} a movimentação.`;
       setErro(msgErro);
       setTimeout(() => setErro(null), 5000);
     }
   };
 
+  if (loading) {
+    return <p className="p-6 text-gray-600">Carregando dados...</p>;
+  }
+
   return (
     <>
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        Registrar Movimentação
+        {isEditing ? "Editar Movimentação" : "Registrar Movimentação"}
       </h1>
 
       {sucesso && (
@@ -195,7 +247,7 @@ export default function RegistrarMovimentacao() {
             type="submit"
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
-            Registrar
+            {isEditing ? "Salvar Edição" : "Registrar"}
           </button>
         </div>
       </form>

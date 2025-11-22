@@ -1,37 +1,79 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; 
+import { useSearchParams, Link } from "react-router-dom"; 
 import api from "../api"; 
 
 export default function CadastroMaquina() {
+  const [searchParams] = useSearchParams();
+  const idMaquina = searchParams.get("id");
+  
   const [funcionarios, setFuncionarios] = useState([]);
   const [sucesso, setSucesso] = useState(null); 
-  const [erro, setErro] = useState(null); // Adicionando estado para erros
+  const [erro, setErro] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     codPatrimonial: "",
     numSerie: "",
-    valor: "",
+    valor: "0.00",
     idResponsavel: "",
     localizacao: "",
     status: "ATIVA", 
   });
 
   useEffect(() => {
-    const fetchFuncionarios = async () => {
-      try {
-        // 💡 SUBSTITUIÇÃO: Usando 'api.get' para incluir o token JWT
-        const response = await api.get("/funcionarios");
-        setFuncionarios(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar funcionários:", error);
-        setErro("Erro ao carregar lista de funcionários.");
+    fetchData();
+  }, [idMaquina]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setErro(null);
+    setSucesso(null);
+    setIsEditing(!!idMaquina);
+
+    try {
+      const resFuncionarios = await api.get("/funcionarios");
+      setFuncionarios(resFuncionarios.data || []);
+      
+      if (idMaquina) {
+        const resMaquina = await api.get(`/maquinas/${idMaquina}`);
+        const dadosMaquina = resMaquina.data;
+        
+        const valorFormatado = dadosMaquina.valor != null ? parseFloat(dadosMaquina.valor).toFixed(2) : "0.00";
+        
+        setFormData({
+          codPatrimonial: dadosMaquina.codPatrimonial || "",
+          numSerie: dadosMaquina.numSerie || "",
+          localizacao: dadosMaquina.localizacao || "",
+          status: dadosMaquina.status || "ATIVA",
+          valor: valorFormatado, 
+          idResponsavel: dadosMaquina.idResponsavel?.toString() || "", 
+        });
       }
-    };
-    fetchFuncionarios();
-  }, []);
+      
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      const statusCode = error.response?.status;
+      if (idMaquina) {
+         setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}. Verifique o token/Role.`);
+      } else {
+         setErro("Erro ao carregar lista de funcionários.");
+      }
+      
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // 🛑 BLOQUEIO DUPLO: Impede alteração do codPatrimonial ou numSerie no modo edição
+    if (isEditing && (name === 'codPatrimonial' || name === 'numSerie')) {
+        return;
+    }
+
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -43,35 +85,47 @@ export default function CadastroMaquina() {
     setSucesso(null);
     setErro(null);
 
+    const payload = {
+        idMaquina: idMaquina ? parseInt(idMaquina) : undefined,
+        ...formData,
+        idResponsavel: formData.idResponsavel ? parseInt(formData.idResponsavel) : null,
+        valor: parseFloat(formData.valor),
+    };
+    
     try {
-      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
-      await api.post(
-        "/maquinas",
-        {...formData, idResponsavel: formData.idResponsavel || null}
-      );
-      
-      setSucesso("Máquina cadastrada com sucesso!");
-      
-      // Limpa o formulário resetando o estado
-      setFormData({
-        codPatrimonial: "", numSerie: "", valor: "", idResponsavel: "",
-        localizacao: "", status: "ATIVA",
-      });
+      if (idMaquina) {
+        // MODO EDIÇÃO (PUT)
+        await api.put(`/maquinas/${idMaquina}`, payload); 
+        setSucesso("Máquina atualizada com sucesso!");
+      } else {
+        // MODO CADASTRO (POST)
+        await api.post("/maquinas", payload);
+        setSucesso("Máquina cadastrada com sucesso!");
+        
+        setFormData({
+          codPatrimonial: "", numSerie: "", valor: "0.00", idResponsavel: "",
+          localizacao: "", status: "ATIVA",
+        });
+      }
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
-      console.error("Erro ao cadastrar máquina:", error);
-      // Tratamento de erro mais específico
-      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar cadastrar a máquina.";
+      console.error("Erro ao salvar máquina:", error);
+      const msgErro = error.response?.data?.message || `Falha ao ${idMaquina ? 'atualizar' : 'cadastrar'} a máquina.`;
       setErro(msgErro);
       setTimeout(() => setErro(null), 5000);
     }
   };
+  
+  if (loading) {
+    return <p className="p-6 text-gray-600">Carregando dados...</p>;
+  }
+
 
   return (
     <>
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        Cadastrar Máquina
+        {idMaquina ? "Editar Máquina" : "Cadastrar Máquina"}
       </h1>
 
       {sucesso && (
@@ -90,44 +144,45 @@ export default function CadastroMaquina() {
         className="max-w-2xl mx-auto space-y-6 text-base"
         onSubmit={handleSubmit}
       >
+        
+        {/* Código Patrimonial - BLOQUEADO PARA EDIÇÃO */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <label className="font-semibold" htmlFor="codPatrimonial">
-            Código de patrimônio:
-          </label>
+          <label className="font-semibold" htmlFor="codPatrimonial">Código de patrimônio:</label>
           <input
             id="codPatrimonial"
             name="codPatrimonial"
             type="text"
-            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            readOnly={isEditing} 
+            className={`rounded px-4 py-2 w-full md:w-72 ${isEditing ? 'bg-gray-300 cursor-not-allowed' : 'bg-gray-200'}`}
             value={formData.codPatrimonial}
             onChange={handleChange}
             required
           />
         </div>
 
+        {/* Número de Série - BLOQUEADO PARA EDIÇÃO */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <label className="font-semibold" htmlFor="numSerie">
-            Número de série:
-          </label>
+          <label className="font-semibold" htmlFor="numSerie">Número de série:</label>
           <input
             id="numSerie"
             name="numSerie"
             type="text"
-            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            readOnly={isEditing} 
+            className={`rounded px-4 py-2 w-full md:w-72 ${isEditing ? 'bg-gray-300 cursor-not-allowed' : 'bg-gray-200'}`}
             value={formData.numSerie}
             onChange={handleChange}
             required
           />
         </div>
 
+        {/* Valor da Máquina */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <label className="font-semibold" htmlFor="valor">
-            Valor da máquina:
-          </label>
+          <label className="font-semibold" htmlFor="valor">Valor da máquina:</label>
           <input
             id="valor"
             name="valor"
             type="number"
+            step="0.01"
             className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
             value={formData.valor}
             onChange={handleChange}
@@ -135,10 +190,9 @@ export default function CadastroMaquina() {
           />
         </div>
 
+        {/* Responsável pela Máquina */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <label className="font-semibold" htmlFor="idResponsavel">
-            Responsável pela máquina:
-          </label>
+          <label className="font-semibold" htmlFor="idResponsavel">Responsável pela máquina:</label>
           <select
             id="idResponsavel"
             name="idResponsavel"
@@ -155,10 +209,9 @@ export default function CadastroMaquina() {
           </select>
         </div>
 
+        {/* Localização da Máquina */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <label className="font-semibold" htmlFor="localizacao">
-            Localização da máquina:
-          </label>
+          <label className="font-semibold" htmlFor="localizacao">Localização da máquina:</label>
           <input
             id="localizacao"
             name="localizacao"
@@ -170,10 +223,9 @@ export default function CadastroMaquina() {
           />
         </div>
 
+        {/* Status da Máquina */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <label className="font-semibold" htmlFor="status">
-            Status da máquina:
-          </label>
+          <label className="font-semibold" htmlFor="status">Status da máquina:</label>
           <select
             id="status"
             name="status"
@@ -182,9 +234,9 @@ export default function CadastroMaquina() {
             onChange={handleChange}
             required
           >
-            <option>ATIVA</option>
-            <option>INATIVA</option>
-            <option>EM_MANUTENCAO</option>
+            <option value="ATIVA">ATIVA</option>
+            <option value="INATIVA">INATIVA</option>
+            <option value="EM_MANUTENCAO">EM MANUTENÇÃO</option>
           </select>
         </div>
 
@@ -193,7 +245,7 @@ export default function CadastroMaquina() {
             type="submit"
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
-            Cadastrar
+            {idMaquina ? "Salvar Edição" : "Cadastrar"}
           </button>
         </div>
       </form>

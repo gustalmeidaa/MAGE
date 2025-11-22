@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; 
 
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -11,6 +11,8 @@ export default function Busca() {
   const [funcionarios, setFuncionarios] = useState([]);
   const [setores, setSetores] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  
   const [filtro, setFiltro] = useState({
     codPatrimonial: "",
     numSerie: "",
@@ -20,32 +22,33 @@ export default function Busca() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [resMaquinas, resFuncionarios, resSetores] = await Promise.all([
-          api.get("/maquinas"),
-          api.get("/funcionarios"),
-          api.get("/setores"),
-        ]);
-        
-        const dataArray = resMaquinas.data || [];
-        const sortedData = dataArray.sort((a, b) =>
-          (a.codPatrimonial || "").localeCompare(b.codPatrimonial || "")
-        );
-
-        setMaquinas(sortedData);
-        setFuncionarios(resFuncionarios.data || []);
-        setSetores(resSetores.data || []);
-
-      } catch (error) {
-        console.error("Erro ao buscar dados das máquinas:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [resMaquinas, resFuncionarios, resSetores] = await Promise.all([
+        api.get("/maquinas"),
+        api.get("/funcionarios"),
+        api.get("/setores"),
+      ]);
+      
+      const dataArray = resMaquinas.data || [];
+      const sortedData = dataArray.sort((a, b) =>
+        (a.codPatrimonial || "").localeCompare(b.codPatrimonial || "")
+      );
+
+      setMaquinas(sortedData);
+      setFuncionarios(resFuncionarios.data || []);
+      setSetores(resSetores.data || []);
+
+    } catch (error) {
+      console.error("Erro ao buscar dados das máquinas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const funcionarioSetorMap = {};
   funcionarios.forEach(f => {
@@ -81,6 +84,15 @@ export default function Busca() {
       return true;
     }
   );
+  
+  const handleEditar = (idMaquina) => {
+    // Verifica se o ID é válido antes de navegar
+    if (idMaquina) {
+        navigate(`/cadastrar-maquina?id=${idMaquina}`);
+    } else {
+        alert("ID da máquina não encontrado para edição.");
+    }
+  };
 
   const handleExportCSV = () => {
     if (filtrados.length === 0) {
@@ -88,13 +100,8 @@ export default function Busca() {
       return;
     }
     const headers = [
-      "Cód. Patrimonial",
-      "Nº de Série",
-      "Localização",
-      "Valor (R$)",
-      "Status",
-      "ID Responsável",
-      "Setor Responsável",
+      "Cód. Patrimonial", "Nº de Série", "Localização", "Valor (R$)",
+      "Status", "ID Responsável", "Setor Responsável",
     ];
     const csvRows = [headers.join(",")];
 
@@ -103,19 +110,9 @@ export default function Busca() {
       const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
 
       const row = [
-        m.codPatrimonial || "-",
-        m.numSerie || "-",
-        m.localizacao || "-",
-        m.valor
-          ?.toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })
-          .replace(".", "")
-        || "0,00",
-        m.status || "-",
-        m.idResponsavel || "N/A",
-        setorNome,
+        m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-",
+        m.valor?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(".", "") || "0,00",
+        m.status || "-", m.idResponsavel || "N/A", setorNome,
       ];
       csvRows.push(row.map((val) => `"${val}"`).join(","));
     });
@@ -138,13 +135,8 @@ export default function Busca() {
     try {
       const doc = new jsPDF("landscape");
       const tableColumn = [
-        "Cód. Patrimonial",
-        "Nº de Série",
-        "Localização",
-        "Valor (R$)",
-        "Status",
-        "ID Responsável",
-        "Setor Responsável",
+        "Cód. Patrimonial", "Nº de Série", "Localização", "Valor (R$)",
+        "Status", "ID Responsável", "Setor Responsável",
       ];
       const tableRows = [];
 
@@ -153,16 +145,9 @@ export default function Busca() {
         const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
         
         const maquinaData = [
-          m.codPatrimonial || "-",
-          m.numSerie || "-",
-          m.localizacao || "-",
-          m.valor?.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }) || "R$ 0,00",
-          m.status || "-",
-          m.idResponsavel || "N/A",
-          setorNome,
+          m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-",
+          m.valor?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "R$ 0,00",
+          m.status || "-", m.idResponsavel || "N/A", setorNome,
         ];
         tableRows.push(maquinaData);
       });
@@ -293,9 +278,9 @@ export default function Busca() {
                 <th className="px-4 py-2 border text-left">Nº de Série</th>
                 <th className="px-4 py-2 border text-left">Localização</th>
                 <th className="px-4 py-2 border text-left">Status</th>
-                <th className="px-4 py-2 border text-left">Responsável (ID)</th>
                 <th className="px-4 py-2 border text-left">Setor</th>
                 <th className="px-4 py-2 border text-left">Valor (R$)</th>
+                <th className="px-4 py-2 border text-center">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -305,20 +290,27 @@ export default function Busca() {
 
                 return (
                   <tr
-                    key={`row-${m.codPatrimonial}`}
+                    key={m.idMaquina || m.codPatrimonial}
                     className="hover:bg-gray-50 text-sm"
                   >
                     <td className="border px-4 py-2">{m.codPatrimonial || "-"}</td>
                     <td className="border px-4 py-2">{m.numSerie || "-"}</td>
                     <td className="border px-4 py-2">{m.localizacao || "-"}</td>
                     <td className="border px-4 py-2">{m.status || "-"}</td>
-                    <td className="border px-4 py-2">{m.idResponsavel || "N/A"}</td>
                     <td className="border px-4 py-2">{setorNome}</td>
                     <td className="border px-4 py-2">
                       {m.valor?.toLocaleString("pt-BR", {
                         style: "currency",
                         currency: "BRL",
                       }) || "R$ 0,00"}
+                    </td>
+                    <td className="border px-4 py-2 text-center space-x-2"> 
+                      <button
+                        onClick={() => handleEditar(m.idMaquina)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md"
+                      >
+                        Editar
+                      </button>
                     </td>
                   </tr>
                 );
@@ -334,7 +326,7 @@ export default function Busca() {
               
               return (
                 <div
-                  key={`card-${m.codPatrimonial}`}
+                  key={m.idMaquina || m.codPatrimonial}
                   className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm space-y-2"
                 >
                   <div className="flex justify-between items-start font-bold">
@@ -371,6 +363,14 @@ export default function Busca() {
                         currency: "BRL",
                       }) || "R$ 0,00"}
                     </span>
+                  </div>
+                  <div className="flex justify-end mt-3 gap-2">
+                    <button
+                      onClick={() => handleEditar(m.idMaquina)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm"
+                    >
+                      Editar
+                    </button>
                   </div>
                 </div>
               );

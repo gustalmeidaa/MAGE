@@ -86,7 +86,6 @@ export default function Busca() {
   );
   
   const handleEditar = (idMaquina) => {
-    // Verifica se o ID é válido antes de navegar
     if (idMaquina) {
         navigate(`/cadastrar-maquina?id=${idMaquina}`);
     } else {
@@ -167,17 +166,32 @@ export default function Busca() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
+  
+  const handleVolta = () => {
+    navigate(-1);
+  };
 
   if (loading)
     return <p className="p-6 text-gray-600">Carregando máquinas...</p>;
 
   return (
     <div className="p-6">
-      {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-3">
-        <h2 className="text-2xl font-bold text-gray-800">Lista de Máquinas</h2>
-
-        <div className="flex flex-wrap gap-3">
+      <div className="flex items-center justify-start mb-6 relative">
+        
+        <button
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-10"
+        >
+          &#8592; Voltar
+        </button>
+        
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center">
+            <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">
+                Lista de Máquinas
+            </h2>
+        </div>
+        
+        <div className="flex flex-wrap gap-3 ml-auto">
           <Link to="/cadastrar-maquina">
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md transition">
               + Cadastrar Máquina
@@ -335,9 +349,7 @@ export default function Busca() {
                       className={`px-2 py-1 text-xs rounded-full text-white ${
                         m.status === "ATIVA"
                           ? "bg-green-500"
-                          : m.status === "INATIVA"
-                          ? "bg-red-500"
-                          : "bg-yellow-500"
+                          : "bg-red-500"
                       }`}
                     >
                       {m.status || "N/A"}

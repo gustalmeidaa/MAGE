@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom"; 
+import { useSearchParams, Link, useNavigate } from "react-router-dom"; 
 import api from "../api"; 
 
 export default function CadastroMaquina() {
   const [searchParams] = useSearchParams();
   const idMaquina = searchParams.get("id");
+  const navigate = useNavigate();
   
   const [funcionarios, setFuncionarios] = useState([]);
   const [sucesso, setSucesso] = useState(null); 
@@ -69,7 +70,6 @@ export default function CadastroMaquina() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // 🛑 BLOQUEIO DUPLO: Impede alteração do codPatrimonial ou numSerie no modo edição
     if (isEditing && (name === 'codPatrimonial' || name === 'numSerie')) {
         return;
     }
@@ -121,9 +121,22 @@ export default function CadastroMaquina() {
     return <p className="p-6 text-gray-600">Carregando dados...</p>;
   }
 
+  // Função para voltar à página anterior no histórico
+  const handleVolta = () => {
+    navigate(-1);
+  };
+
 
   return (
     <>
+    {/* 💡 BOTÃO VOLTAR */}
+        <button
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2"
+        >
+          {/* Unicode para Seta Esquerda */}
+          &#8592; Voltar
+        </button>
       <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
         {idMaquina ? "Editar Máquina" : "Cadastrar Máquina"}
       </h1>

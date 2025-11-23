@@ -1,14 +1,53 @@
-import React, { useState } from "react";
-// 💡 Importa a instância configurada do Axios (api) que anexa o token
-import api from "../api"; 
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import api from "../api";
 
 export default function CadastroSetor() {
+  const [searchParams] = useSearchParams();
+  const idSetor = searchParams.get("id");
+  const navigate = useNavigate();
+
   const [sucesso, setSucesso] = useState(null);
   const [erro, setErro] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const isEditing = !!idSetor;
 
   const [formData, setFormData] = useState({
     nomeSetor: "",
   });
+
+  useEffect(() => {
+    fetchData();
+  }, [idSetor]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setErro(null);
+    setSucesso(null);
+
+    try {
+      if (idSetor) {
+        const response = await api.get(`/setores/${idSetor}`);
+        const dadosSetor = response.data;
+
+        setFormData({
+            nomeSetor: dadosSetor.nomeSetor || "",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      const statusCode = error.response?.status;
+      if (isEditing) {
+          setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}.`);
+      } else {
+          setErro("Erro ao carregar dados iniciais.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,29 +59,58 @@ export default function CadastroSetor() {
     setSucesso(null);
     setErro(null);
 
+    const payload = {
+        idSetor: isEditing ? parseInt(idSetor) : undefined,
+        ...formData
+    };
+
     try {
-      // 💡 SUBSTITUIÇÃO: Usando 'api.post' para incluir o token JWT
-      await api.post("/setores", formData);
-      
-      setSucesso("Setor cadastrado com sucesso!");
-      
-      // Limpa o formulário resetando o estado
-      setFormData({ nomeSetor: "" });
+      if (isEditing) {
+        await api.put(`/setores/${idSetor}`, payload);
+        setSucesso("Setor atualizado com sucesso!");
+      } else {
+        await api.post("/setores", payload);
+        setSucesso("Setor cadastrado com sucesso!");
+        
+        setFormData({ nomeSetor: "" });
+      }
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
-      console.error("Erro ao cadastrar setor:", error);
-      const msgErro = error.response?.data?.message || "Ocorreu um erro ao tentar cadastrar o setor.";
+      console.error("Erro ao salvar setor:", error);
+      const msgErro = error.response?.data?.message || `Ocorreu um erro ao tentar ${isEditing ? 'atualizar' : 'cadastrar'} o setor.`;
       setErro(msgErro);
       setTimeout(() => setErro(null), 5000);
     }
   };
+  
+  const handleVolta = () => {
+    navigate(-1);
+  };
 
+  if (loading && !isEditing) {
+    return <p className="p-6 text-gray-600">Carregando...</p>;
+  }
+  
   return (
     <>
-      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        Cadastrar Setor
-      </h1>
+      <div className="flex items-center justify-between mb-6 relative">
+        
+        <button
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2"
+        >
+          &#8592; Voltar
+        </button>
+        
+        <div className="absolute left-1/2 transform -translate-x-1/2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
+                {isEditing ? "Editar Setor" : "Cadastrar Setor"}
+            </h1>
+        </div>
+
+        <div className="w-24 md:w-auto"></div> 
+      </div>
 
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
@@ -80,7 +148,7 @@ export default function CadastroSetor() {
             type="submit"
             className="w-full max-w-xs md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg"
           >
-            Cadastrar
+            {isEditing ? "Salvar Edição" : "Cadastrar"}
           </button>
         </div>
       </form>

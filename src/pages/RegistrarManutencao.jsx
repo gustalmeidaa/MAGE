@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom"; // 💡 Adicionado useSearchParams
+import { useSearchParams, useNavigate } from "react-router-dom"; 
 import api from "../api"; 
 
 export default function RegistrarManutencao() {
   const [searchParams] = useSearchParams();
-  const idHistorico = searchParams.get("id"); // Captura o ID da manutenção na URL
+  const idHistorico = searchParams.get("id");
+  const navigate = useNavigate();
   
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
@@ -12,7 +13,6 @@ export default function RegistrarManutencao() {
   const [erro, setErro] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // O modo Edição é determinado pela presença do ID na URL
   const isEditing = !!idHistorico; 
 
   const [formData, setFormData] = useState({
@@ -33,7 +33,6 @@ export default function RegistrarManutencao() {
     setSucesso(null);
 
     try {
-      // 1. Busca Funcionários e Máquinas
       const [resMaquinas, resFuncionarios] = await Promise.all([
         api.get("/maquinas"),
         api.get("/funcionarios"),
@@ -41,17 +40,14 @@ export default function RegistrarManutencao() {
       setMaquinas(resMaquinas.data || []);
       setFuncionarios(resFuncionarios.data || []);
       
-      // 2. Se houver ID, busca os dados da manutenção para edição
       if (idHistorico) {
-        const resManutencao = await api.get(`/manutencoes/${idHistorico}`); // Assume que a rota GET /manutencoes/{id} existe
+        const resManutencao = await api.get(`/manutencoes/${idHistorico}`);
         const dadosManutencao = resManutencao.data;
 
-        // Formata a data e preenche o formulário
         const dataFormatada = new Date(dadosManutencao.data).toISOString().substring(0, 16);
 
         setFormData({
             data: dataFormatada || "",
-            // Garante que o ID é string para o select
             idMaquina: dadosManutencao.idMaquina?.idMaquina?.toString() || "",
             idFuncionario: dadosManutencao.idFuncionario?.idFuncionario?.toString() || "",
             tipoManutencao: dadosManutencao.tipoManutencao || "preventiva",
@@ -85,8 +81,8 @@ export default function RegistrarManutencao() {
     setSucesso(null);
     setErro(null);
 
-    // Converte os IDs de volta para Number ou null
     const payload = {
+        idHistoricoManutencoes: isEditing ? parseInt(idHistorico) : undefined,
         ...formData,
         idMaquina: formData.idMaquina ? parseInt(formData.idMaquina) : null,
         idFuncionario: formData.idFuncionario ? parseInt(formData.idFuncionario) : null,
@@ -94,15 +90,12 @@ export default function RegistrarManutencao() {
     
     try {
       if (isEditing) {
-        // MODO EDIÇÃO (PUT)
-        await api.put(`/manutencoes/${idHistorico}`, payload); // Assume que a rota PUT /manutencoes/{id} existe
+        await api.put(`/manutencoes/${idHistorico}`, payload);
         setSucesso("Manutenção atualizada com sucesso!");
       } else {
-        // MODO CADASTRO (POST)
         await api.post("/manutencoes", payload);
         setSucesso("Manutenção registrada com sucesso!");
         
-        // Limpa o formulário após o cadastro
         setFormData({
             data: "", idMaquina: "", idFuncionario: "",
             tipoManutencao: "preventiva", procedimentos: "",
@@ -118,15 +111,32 @@ export default function RegistrarManutencao() {
     }
   };
   
+  const handleVolta = () => {
+    navigate(-1);
+  };
+
   if (loading) {
     return <p className="p-6 text-gray-600">Carregando dados...</p>;
   }
 
   return (
     <>
-      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        {isEditing ? "Editar Manutenção" : "Registrar Manutenção"}
-      </h1>
+      <div className="flex items-center justify-start mb-6 relative">
+        
+        <button
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-10"
+        >
+          &#8592; Voltar
+        </button>
+
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
+              {isEditing ? "Editar Manutenção" : "Registrar Manutenção"}
+            </h1>
+        </div>
+        
+      </div>
 
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">

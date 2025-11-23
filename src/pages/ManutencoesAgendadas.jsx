@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-// 💡 Usa a instância configurada do Axios (com token)
+import { useNavigate } from "react-router-dom"; // Importado useNavigate
 import api from "../api";
 // Importações para PDF
 import jsPDF from "jspdf";
@@ -17,10 +16,8 @@ export default function ManutencoesAgendadas() {
 
   const carregarAgendamentos = async () => {
     try {
-      // 💡 Requisição segura usando a instância 'api'
       const response = await api.get("/manutencoes-agendadas");
       
-      // Garante que é um array e ordena por ID
       const dataArray = response.data || [];
       const sortedData = dataArray.sort(
         (a, b) => a.idManutencaoAgendada - b.idManutencaoAgendada
@@ -39,7 +36,6 @@ export default function ManutencoesAgendadas() {
       return;
 
     try {
-      // 💡 Requisição segura usando a instância 'api'
       await api.delete(`/manutencoes-agendadas/${id}`);
       setAgendamentos((prev) =>
         prev.filter((item) => item.idManutencaoAgendada !== id)
@@ -59,7 +55,6 @@ export default function ManutencoesAgendadas() {
     navigate("/agendar-manutencao");
   };
 
-  // Função CSV atualizada para o padrão
   const handleExportCSV = () => {
     if (agendamentos.length === 0) {
       alert("Não há dados para exportar.");
@@ -77,7 +72,6 @@ export default function ManutencoesAgendadas() {
         ag.tipoManutencao || "-",
         ag.procedimentos || "-",
       ];
-      // Adiciona aspas para garantir a formatação
       csvRows.push(
         row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(",")
       );
@@ -93,7 +87,6 @@ export default function ManutencoesAgendadas() {
     link.click();
   };
 
-  // FUNÇÃO DE EXPORTAR PDF
   const handleExportPDF = () => {
     if (agendamentos.length === 0) {
       alert("Nenhum dado para exportar.");
@@ -127,7 +120,6 @@ export default function ManutencoesAgendadas() {
             15
           );
         },
-         // Estilo para que a coluna 'Procedimentos' possa quebrar linha
          columnStyles: {
           4: { cellWidth: 'wrap' } 
         }
@@ -138,6 +130,10 @@ export default function ManutencoesAgendadas() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
+  
+  const handleVolta = () => {
+    navigate(-1);
+  };
 
   if (loading)
     return <p className="p-6 text-gray-600">Carregando agendamentos...</p>;
@@ -145,12 +141,24 @@ export default function ManutencoesAgendadas() {
   return (
     <div className="p-6">
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-3">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Manutenções Agendadas
-        </h2>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-3 relative">
+        
+        {/* Lado Esquerdo (Botão Voltar) */}
+        <button
+            onClick={handleVolta}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-full transition duration-150 flex items-center gap-2"
+        >
+            &#8592; Voltar
+        </button>
 
-        {/* BOTÕES */}
+        {/* Título Centralizado */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 top-0 w-full md:relative md:left-auto md:transform-none md:w-auto md:text-left">
+            <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">
+                Manutenções Agendadas
+            </h2>
+        </div>
+        
+        {/* Lado Direito (Botões de Ação) */}
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleNovoAgendamento}

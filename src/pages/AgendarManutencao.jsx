@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom"; // 💡 Adicionado useSearchParams
+import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../api"; 
 
 export default function AgendarManutencao() {
   const [searchParams] = useSearchParams();
-  const idAgendamento = searchParams.get("id"); // Captura o ID do agendamento na URL
+  const idAgendamento = searchParams.get("id");
+  const navigate = useNavigate();
   
   const [maquinas, setMaquinas] = useState([]);
   const [sucesso, setSucesso] = useState(null);
   const [erro, setErro] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  const isEditing = !!idAgendamento; // Define se estamos no modo edição
+  const isEditing = !!idAgendamento;
 
   const [formData, setFormData] = useState({
     dataAgendada: "",
@@ -30,23 +31,17 @@ export default function AgendarManutencao() {
     setSucesso(null);
 
     try {
-      // 1. Busca Máquinas (necessário para o select)
       const resMaquinas = await api.get("/maquinas");
       setMaquinas(resMaquinas.data || []);
       
-      // 2. Se houver ID, busca os dados do agendamento para edição
       if (idAgendamento) {
-        // Assume que a rota GET /manutencoes-agendadas/{id} existe
         const resAgendamento = await api.get(`/manutencoes-agendadas/${idAgendamento}`); 
         const dadosAgendamento = resAgendamento.data;
 
-        // Formata a data para preencher o input datetime-local
         const dataFormatada = new Date(dadosAgendamento.dataAgendada).toISOString().substring(0, 16);
 
-        // Preenche o estado do formulário
         setFormData({
             dataAgendada: dataFormatada || "",
-            // Garante que o ID da máquina é string para o select
             idMaquina: dadosAgendamento.maquina?.idMaquina?.toString() || "", 
             tipoManutencao: dadosAgendamento.tipoManutencao || "preventiva",
             procedimentos: dadosAgendamento.procedimentos || "",
@@ -80,24 +75,19 @@ export default function AgendarManutencao() {
     setErro(null);
 
     const payload = {
-        // Envia o ID no corpo apenas se estiver editando (alguns backends exigem)
         idManutencaoAgendada: isEditing ? parseInt(idAgendamento) : undefined,
         ...formData,
-        // Converte o ID da Máquina para Number
         idMaquina: formData.idMaquina ? parseInt(formData.idMaquina) : null,
     };
     
     try {
       if (isEditing) {
-        // MODO EDIÇÃO (PUT)
         await api.put(`/manutencoes-agendadas/${idAgendamento}`, payload);
         setSucesso("Manutenção agendada atualizada com sucesso!");
       } else {
-        // MODO CADASTRO (POST)
         await api.post("/manutencoes-agendadas", payload);
         setSucesso("Manutenção agendada com sucesso!");
         
-        // Limpa o formulário após o cadastro
         setFormData({
             dataAgendada: "", idMaquina: "", 
             tipoManutencao: "preventiva", procedimentos: "",
@@ -112,6 +102,10 @@ export default function AgendarManutencao() {
       setTimeout(() => setErro(null), 5000);
     }
   };
+  
+  const handleVolta = () => {
+    navigate(-1);
+  };
 
   if (loading) {
     return <p className="p-6 text-gray-600">Carregando dados...</p>;
@@ -119,9 +113,22 @@ export default function AgendarManutencao() {
 
   return (
     <>
-      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        {isEditing ? "Editar Agendamento" : "Agendar Manutenção"}
-      </h1>
+      <div className="flex items-center justify-start mb-6 relative">
+        
+        <button
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-10"
+        >
+          &#8592; Voltar
+        </button>
+        
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
+              {isEditing ? "Editar Agendamento" : "Agendar Manutenção"}
+            </h1>
+        </div>
+        
+      </div>
 
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">

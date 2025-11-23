@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom"; 
+import { useSearchParams, useNavigate } from "react-router-dom"; 
 import api from "../api"; 
 
 export default function CadastroFuncionario() {
   const [searchParams] = useSearchParams();
-  const idFuncionario = searchParams.get("id"); // Captura o ID do funcionário na URL
+  const idFuncionario = searchParams.get("id");
+  const navigate = useNavigate();
   
   const [setores, setSetores] = useState([]);
   const [sucesso, setSucesso] = useState(null);
@@ -15,7 +16,7 @@ export default function CadastroFuncionario() {
 
   const [formData, setFormData] = useState({
     nomeFuncionario: "",
-    nomeSetor: "", // Armazena o nome do setor
+    nomeSetor: "",
   });
 
   useEffect(() => {
@@ -28,20 +29,15 @@ export default function CadastroFuncionario() {
     setSucesso(null);
 
     try {
-      // 1. Busca Setores
       const resSetores = await api.get("/setores");
       setSetores(resSetores.data || []);
 
-      // 2. Se houver ID, busca os dados do funcionário para edição
       if (idFuncionario) {
-        // Assume que a rota GET /funcionarios/{id} existe
         const resFuncionario = await api.get(`/funcionarios/${idFuncionario}`); 
         const dadosFuncionario = resFuncionario.data;
 
-        // Preenche o estado do formulário
         setFormData({
             nomeFuncionario: dadosFuncionario.nomeFuncionario || "",
-            // Pega o nome do setor do objeto aninhado
             nomeSetor: dadosFuncionario.setor?.nomeSetor || "", 
         });
       }
@@ -73,7 +69,6 @@ export default function CadastroFuncionario() {
     setErro(null);
 
     const payload = {
-        // ESSENCIAL: Garante que o ID está no corpo para o PUT
         idFuncionario: isEditing ? parseInt(idFuncionario) : undefined, 
         ...formData,
         nomeSetor: formData.nomeSetor || null,
@@ -81,15 +76,12 @@ export default function CadastroFuncionario() {
 
     try {
       if (isEditing) {
-        // MODO EDIÇÃO (PUT)
         await api.put(`/funcionarios/${idFuncionario}`, payload);
         setSucesso("Funcionário atualizado com sucesso!");
       } else {
-        // MODO CADASTRO (POST)
         await api.post("/funcionarios", payload);
         setSucesso("Funcionário cadastrado com sucesso!");
         
-        // Limpa o formulário após o cadastro
         setFormData({ nomeFuncionario: "", nomeSetor: "" });
       }
 
@@ -101,6 +93,10 @@ export default function CadastroFuncionario() {
       setTimeout(() => setErro(null), 5000);
     }
   };
+  
+  const handleVolta = () => {
+    navigate(-1);
+  };
 
   if (loading) {
     return <p className="p-6 text-gray-600">Carregando dados...</p>;
@@ -108,9 +104,25 @@ export default function CadastroFuncionario() {
 
   return (
     <>
-      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        {isEditing ? "Editar Funcionário" : "Cadastrar Funcionário"}
-      </h1>
+      {/* CORREÇÃO DO LAYOUT: Usando layout absoluto para o título para centralizar corretamente sem colidir com o botão */}
+      <div className="flex items-center justify-start mb-6 relative">
+        
+        {/* LADO ESQUERDO: Botão Voltar */}
+        <button
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-10"
+        >
+          &#8592; Voltar
+        </button>
+        
+        {/* CENTRO: Título Absoluto para Centralização */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
+              {isEditing ? "Editar Funcionário" : "Cadastrar Funcionário"}
+            </h1>
+        </div>
+        
+      </div>
 
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">

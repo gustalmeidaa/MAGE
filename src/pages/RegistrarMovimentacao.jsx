@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom"; 
+import { useSearchParams, useNavigate } from "react-router-dom"; 
 import api from "../api"; 
 
 export default function RegistrarMovimentacao() {
   const [searchParams] = useSearchParams();
-  const idMovimentacao = searchParams.get("id"); // Captura o ID da Movimentação na URL
+  const idMovimentacao = searchParams.get("id");
+  const navigate = useNavigate();
   
   const [maquinas, setMaquinas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
@@ -33,7 +34,6 @@ export default function RegistrarMovimentacao() {
     setSucesso(null);
 
     try {
-      // 1. Busca Funcionários e Máquinas
       const [resMaquinas, resFuncionarios] = await Promise.all([
           api.get("/maquinas"),
           api.get("/funcionarios"),
@@ -41,16 +41,12 @@ export default function RegistrarMovimentacao() {
       setMaquinas(resMaquinas.data || []);
       setFuncionarios(resFuncionarios.data || []);
 
-      // 2. Se houver ID, busca os dados da movimentação para edição
       if (idMovimentacao) {
-          // Assume que a rota GET /movimentacoes/{id} existe
           const resMovimentacao = await api.get(`/movimentacoes/${idMovimentacao}`); 
           const dadosMovimentacao = resMovimentacao.data;
 
-          // Formata a data para preencher o input datetime-local
           const dataFormatada = new Date(dadosMovimentacao.data).toISOString().substring(0, 16);
 
-          // Preenche o estado do formulário
           setFormData({
               data: dataFormatada || "",
               idMaquinaMovimentada: dadosMovimentacao.maquinaMovimentada?.idMaquina?.toString() || "", 
@@ -65,7 +61,7 @@ export default function RegistrarMovimentacao() {
       console.error("Erro ao carregar dados:", error);
       const statusCode = error.response?.status;
       if (isEditing) {
-          setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}. Verifique o token/Role.`);
+          setErro(`Erro ao carregar dados para edição. Status: ${statusCode || 'Sem Conexão'}.`);
       } else {
           setErro("Erro ao carregar listas de seleção.");
       }
@@ -79,7 +75,6 @@ export default function RegistrarMovimentacao() {
     
     setFormData(prevState => ({ ...prevState, [name]: value }));
 
-    // Lógica especial: se a máquina for alterada, atualiza a origem
     if (name === "idMaquinaMovimentada") {
       const maquina = maquinas.find((m) => m.idMaquina.toString() === value);
       setFormData(prevState => ({
@@ -94,7 +89,6 @@ export default function RegistrarMovimentacao() {
     setSucesso(null);
     setErro(null);
 
-    // Converte os IDs de volta para Number ou null e garante que o ID da movimentação esteja no payload para o PUT
     const payload = {
         idMovimentacoes: isEditing ? parseInt(idMovimentacao) : undefined,
         ...formData,
@@ -104,15 +98,12 @@ export default function RegistrarMovimentacao() {
 
     try {
       if (isEditing) {
-        // MODO EDIÇÃO (PUT)
         await api.put(`/movimentacoes/${idMovimentacao}`, payload);
         setSucesso("Movimentação atualizada com sucesso!");
       } else {
-        // MODO CADASTRO (POST)
         await api.post("/movimentacoes", payload);
         setSucesso("Movimentação registrada com sucesso!");
         
-        // Limpa o formulário após o cadastro
         setFormData({
           data: "", idMaquinaMovimentada: "", idResponsavel: "",
           tipo: "entrada", origem: "", destino: "",
@@ -127,6 +118,10 @@ export default function RegistrarMovimentacao() {
       setTimeout(() => setErro(null), 5000);
     }
   };
+  
+  const handleVolta = () => {
+    navigate(-1);
+  };
 
   if (loading) {
     return <p className="p-6 text-gray-600">Carregando dados...</p>;
@@ -134,9 +129,22 @@ export default function RegistrarMovimentacao() {
 
   return (
     <>
-      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        {isEditing ? "Editar Movimentação" : "Registrar Movimentação"}
-      </h1>
+      <div className="flex items-center justify-start mb-6 relative">
+        
+        <button
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-10"
+        >
+          &#8592; Voltar
+        </button>
+        
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
+              {isEditing ? "Editar Movimentação" : "Registrar Movimentação"}
+            </h1>
+        </div>
+        
+      </div>
 
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">

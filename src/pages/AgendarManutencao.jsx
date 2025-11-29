@@ -19,6 +19,7 @@ export default function AgendarManutencao() {
     idMaquina: "",
     tipoManutencao: "preventiva",
     procedimentos: "",
+    custoManutencao: "", // Novo campo para custo da manutenção
   });
 
   useEffect(() => {
@@ -42,9 +43,10 @@ export default function AgendarManutencao() {
 
         setFormData({
             dataAgendada: dataFormatada || "",
-            idMaquina: dadosAgendamento.maquina?.idMaquina?.toString() || "", 
+            idMaquina: dadosAgendamento.idMaquina?.toString() || "", 
             tipoManutencao: dadosAgendamento.tipoManutencao || "preventiva",
             procedimentos: dadosAgendamento.procedimentos || "",
+            custoManutencao: dadosAgendamento.custoManutencao?.toFixed(2) || "", // Formatação do custo
         });
       }
 
@@ -78,6 +80,7 @@ export default function AgendarManutencao() {
         idManutencaoAgendada: isEditing ? parseInt(idAgendamento) : undefined,
         ...formData,
         idMaquina: formData.idMaquina ? parseInt(formData.idMaquina) : null,
+        custoManutencao: parseFloat(formData.custoManutencao.replace(',', '.')), // Conversão para BigDecimal
     };
     
     try {
@@ -90,7 +93,7 @@ export default function AgendarManutencao() {
         
         setFormData({
             dataAgendada: "", idMaquina: "", 
-            tipoManutencao: "preventiva", procedimentos: "",
+            tipoManutencao: "preventiva", procedimentos: "", custoManutencao: "",
         });
       }
 
@@ -107,27 +110,25 @@ export default function AgendarManutencao() {
     navigate(-1);
   };
 
-  if (loading) {
+    if (loading) {
     return <p className="p-6 text-gray-600">Carregando dados...</p>;
   }
 
   return (
     <>
       <div className="flex items-center justify-start mb-6 relative">
-        
         <button
           onClick={handleVolta}
           className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-10"
         >
           &#8592; Voltar
         </button>
-        
+
         <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
-              {isEditing ? "Editar Agendamento" : "Agendar Manutenção"}
-            </h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
+            {isEditing ? "Editar Agendamento" : "Agendar Manutenção"}
+          </h1>
         </div>
-        
       </div>
 
       {sucesso && (
@@ -216,6 +217,23 @@ export default function AgendarManutencao() {
           ></textarea>
         </div>
 
+        {/* Campo de Custo da Manutenção */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <label className="font-semibold" htmlFor="custoManutencao">
+            Custo da manutenção:
+          </label>
+          <input
+            id="custoManutencao"
+            name="custoManutencao"
+            type="number"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            value={formData.custoManutencao}
+            onChange={handleChange}
+            placeholder="Ex: 150.00"
+            required
+          />
+        </div>
+
         {/* Botão de Submissão */}
         <div className="flex justify-center pt-4">
           <button
@@ -240,3 +258,5 @@ export default function AgendarManutencao() {
     </>
   );
 }
+
+

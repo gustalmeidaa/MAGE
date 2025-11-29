@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Importado useNavigate
+import { useNavigate } from "react-router-dom";
 import api from "../api";
-// Importações para PDF
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
@@ -17,7 +16,7 @@ export default function ManutencoesAgendadas() {
   const carregarAgendamentos = async () => {
     try {
       const response = await api.get("/manutencoes-agendadas");
-      
+
       const dataArray = response.data || [];
       const sortedData = dataArray.sort(
         (a, b) => a.idManutencaoAgendada - b.idManutencaoAgendada
@@ -61,7 +60,7 @@ export default function ManutencoesAgendadas() {
       return;
     }
 
-    const headers = ["ID", "Máquina", "Data", "Tipo", "Procedimentos"];
+    const headers = ["ID", "Máquina", "Data", "Tipo", "Procedimentos", "Custo"];
     const csvRows = [headers.join(",")];
 
     agendamentos.forEach((ag) => {
@@ -71,6 +70,7 @@ export default function ManutencoesAgendadas() {
         new Date(ag.dataAgendada).toLocaleDateString("pt-BR"),
         ag.tipoManutencao || "-",
         ag.procedimentos || "-",
+        ag.custoManutencao?.toFixed(2) || "0.00", // Novo campo Custo
       ];
       csvRows.push(
         row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(",")
@@ -92,9 +92,10 @@ export default function ManutencoesAgendadas() {
       alert("Nenhum dado para exportar.");
       return;
     }
+
     try {
       const doc = new jsPDF();
-      const tableColumn = ["ID", "Máquina", "Data", "Tipo", "Procedimentos"];
+      const tableColumn = ["ID", "Máquina", "Data", "Tipo", "Procedimentos", "Custo"];
       const tableRows = [];
 
       agendamentos.forEach((ag) => {
@@ -104,6 +105,7 @@ export default function ManutencoesAgendadas() {
           new Date(ag.dataAgendada).toLocaleDateString("pt-BR"),
           ag.tipoManutencao || "-",
           ag.procedimentos || "-",
+          ag.custoManutencao?.toFixed(2) || "0.00", // Novo campo Custo
         ];
         tableRows.push(agendamentoData);
       });
@@ -114,14 +116,14 @@ export default function ManutencoesAgendadas() {
         startY: 20,
         didDrawPage: (data) => {
           doc.setFontSize(18);
-          doc.text(
-            "Relatório de Manutenções Agendadas",
-            data.settings.margin.left,
-            15
-          );
+                      doc.text(
+              "Relatório de Manutenções Agendadas",
+              data.settings.margin.left,
+              15
+            );
         },
-         columnStyles: {
-          4: { cellWidth: 'wrap' } 
+        columnStyles: {
+          4: { cellWidth: 'wrap' } // Adaptando a largura da coluna de procedimentos
         }
       });
       doc.save("manutencoes_agendadas.pdf");
@@ -130,7 +132,7 @@ export default function ManutencoesAgendadas() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
-  
+
   const handleVolta = () => {
     navigate(-1);
   };
@@ -140,25 +142,21 @@ export default function ManutencoesAgendadas() {
 
   return (
     <div className="p-6">
-      {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-3 relative">
         
-        {/* Lado Esquerdo (Botão Voltar) */}
         <button
-            onClick={handleVolta}
-            className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-full transition duration-150 flex items-center gap-2"
+          onClick={handleVolta}
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-full transition duration-150 flex items-center gap-2"
         >
-            &#8592; Voltar
+          &#8592; Voltar
         </button>
 
-        {/* Título Centralizado */}
         <div className="absolute left-1/2 transform -translate-x-1/2 top-0 w-full md:relative md:left-auto md:transform-none md:w-auto md:text-left">
-            <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">
-                Manutenções Agendadas
-            </h2>
+          <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">
+            Manutenções Agendadas
+          </h2>
         </div>
         
-        {/* Lado Direito (Botões de Ação) */}
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleNovoAgendamento}
@@ -181,7 +179,6 @@ export default function ManutencoesAgendadas() {
             Exportar para PDF 📄
           </button>
         </div>
-        {/* FIM DOS BOTÕES */}
       </div>
 
       {agendamentos.length === 0 ? (
@@ -199,30 +196,21 @@ export default function ManutencoesAgendadas() {
                 <th className="px-4 py-2 border text-left">Data</th>
                 <th className="px-4 py-2 border text-left">Tipo</th>
                 <th className="px-4 py-2 border text-left">Procedimentos</th>
+                <th className="px-4 py-2 border text-left">Custo</th> {/* Novo Campo Custo */}
                 <th className="px-4 py-2 border text-center">Ações</th>
               </tr>
             </thead>
 
             <tbody>
               {agendamentos.map((ag) => (
-                <tr
-                  key={ag.idManutencaoAgendada}
-                  className="hover:bg-gray-50 text-sm"
-                >
-                  <td className="border px-4 py-2">
-                    {ag.idManutencaoAgendada}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {ag.maquina?.codPatrimonial || "-"}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {new Date(ag.dataAgendada).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {ag.tipoManutencao || "-"}
-                  </td>
-                  <td className="border px-4 py-2 max-w-xs truncate" title={ag.procedimentos}>
-                    {ag.procedimentos || "-"}
+                <tr key={ag.idManutencaoAgendada} className="hover:bg-gray-50 text-sm">
+                  <td className="border px-4 py-2">{ag.idManutencaoAgendada}</td>
+                  <td className="border px-4 py-2">{ag.maquina?.codPatrimonial || "-"}</td>
+                  <td className="border px-4 py-2">{new Date(ag.dataAgendada).toLocaleDateString("pt-BR")}</td>
+                  <td className="border px-4 py-2">{ag.tipoManutencao || "-"}</td>
+                  <td className="border px-4 py-2 max-w-xs truncate" title={ag.procedimentos}>{ag.procedimentos || "-"}</td>
+                                    <td className="border px-4 py-2">
+                    {ag.custoManutencao?.toFixed(2) || "0.00"} {/* Novo campo Custo */}
                   </td>
                   <td className="border px-4 py-2 text-center space-x-2">
                     <button
@@ -256,19 +244,19 @@ export default function ManutencoesAgendadas() {
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Data:</span>
-                  <span>
-                    {new Date(ag.dataAgendada).toLocaleDateString("pt-BR")}
-                  </span>
+                  <span>{new Date(ag.dataAgendada).toLocaleDateString("pt-BR")}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Tipo:</span>
                   <span>{ag.tipoManutencao || "-"}</span>
                 </div>
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Custo:</span>
+                  <span>{ag.custoManutencao?.toFixed(2) || "0.00"}</span> {/* Novo campo Custo */}
+                </div>
                 <div className="text-sm text-gray-600 mt-2 pt-2 border-t">
                   <span className="font-semibold">Procedimentos:</span>
-                  <p className="text-xs mt-1 break-words">
-                    {ag.procedimentos || "-"}
-                  </p>
+                  <p className="text-xs mt-1 break-words">{ag.procedimentos || "-"}</p>
                 </div>
                 <div className="flex justify-end mt-3 gap-2">
                   <button
@@ -292,3 +280,5 @@ export default function ManutencoesAgendadas() {
     </div>
   );
 }
+
+

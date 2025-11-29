@@ -21,6 +21,7 @@ export default function RegistrarManutencao() {
     idFuncionario: "",
     tipoManutencao: "preventiva",
     procedimentos: "",
+    custoManutencao: "" // Novo campo para custo
   });
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function RegistrarManutencao() {
             idFuncionario: dadosManutencao.idFuncionario?.idFuncionario?.toString() || "",
             tipoManutencao: dadosManutencao.tipoManutencao || "preventiva",
             procedimentos: dadosManutencao.procedimentos || "",
+            custoManutencao: dadosManutencao.custoManutencao?.toFixed(2) || "", // Formatação para 2 casas decimais
         });
       }
 
@@ -86,6 +88,7 @@ export default function RegistrarManutencao() {
         ...formData,
         idMaquina: formData.idMaquina ? parseInt(formData.idMaquina) : null,
         idFuncionario: formData.idFuncionario ? parseInt(formData.idFuncionario) : null,
+        custoManutencao: formData.custoManutencao ? parseFloat(formData.custoManutencao) : null // Adicionando o custo ao payload
     };
     
     try {
@@ -98,14 +101,14 @@ export default function RegistrarManutencao() {
         
         setFormData({
             data: "", idMaquina: "", idFuncionario: "",
-            tipoManutencao: "preventiva", procedimentos: "",
+            tipoManutencao: "preventiva", procedimentos: "", custoManutencao: ""
         });
       }
 
       setTimeout(() => setSucesso(null), 4000);
     } catch (error) {
       console.error("Erro ao salvar manutenção:", error);
-      const msgErro = error.response?.data?.message || `Falha ao ${isEditing ? 'atualizar' : 'registrar'} a manutenção.`;
+            const msgErro = error.response?.data?.message || `Falha ao ${isEditing ? 'atualizar' : 'registrar'} a manutenção.`;
       setErro(msgErro);
       setTimeout(() => setErro(null), 5000);
     }
@@ -221,6 +224,7 @@ export default function RegistrarManutencao() {
             required
           >
             <option value="preventiva">Preventiva</option>
+           
             <option value="corretiva">Corretiva</option>
           </select>
         </div>
@@ -239,6 +243,23 @@ export default function RegistrarManutencao() {
             onChange={handleChange}
             required
           ></textarea>
+        </div>
+
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <label className="font-semibold" htmlFor="custoManutencao">
+            Custo:
+          </label>
+          <input
+            id="custoManutencao"
+            name="custoManutencao"
+            type="number"
+            className="bg-gray-200 rounded px-4 py-2 w-full md:w-72"
+            placeholder="Digite o custo da manutenção"
+            value={formData.custoManutencao}
+            onChange={handleChange}
+            required
+            step="0.01" // Permite centavos
+          />
         </div>
 
         <div className="flex justify-center pt-4">
@@ -263,3 +284,4 @@ export default function RegistrarManutencao() {
     </>
   );
 }
+

@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom"; // 💡 Adicionado useNavigate
-// Importações para o PDF
+import { Link, useNavigate } from "react-router-dom"; 
 import jsPDF from "jspdf";
-import "jspdf-autotable";
-// Importa a instância configurada do Axios (api) que anexa o token
+import "jspdf-autotable"; 
 import api from "../api"; 
 
 export default function Movimentacoes() {
   const [manutencoes, setManutencoes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // 💡 Inicializa useNavigate
-  
+  const navigate = useNavigate(); 
+
   const [filtro, setFiltro] = useState({
     id: "",
     data: "",
@@ -73,35 +71,27 @@ export default function Movimentacoes() {
         : true)
     );
   });
-  
-  // --- FUNÇÕES DE AÇÃO ---
-  
+
   const handleEditar = (idManutencao) => {
-      // Redireciona para a página de registro com o ID para edição
-      navigate(`/registrar-manutencao?id=${idManutencao}`);
+    navigate(`/registrar-manutencao?id=${idManutencao}`);
   };
 
   const handleExcluir = async (idManutencao) => {
-      if (!window.confirm(`Tem certeza que deseja excluir o histórico de manutenção ID ${idManutencao}?`))
-        return;
+    if (!window.confirm(`Tem certeza que deseja excluir o histórico de manutenção ID ${idManutencao}?`))
+      return;
 
-      try {
-        // Assume que a rota de delete é /manutencoes/{id}
-        await api.delete(`/manutencoes/${idManutencao}`);
-        
-        // Atualiza a lista removendo o item
-        setManutencoes((prev) =>
-          prev.filter((item) => item.idHistoricoManutencoes !== idManutencao)
-        );
-        alert("Manutenção excluída com sucesso!");
-      } catch (error) {
-        console.error("Erro ao excluir manutenção:", error.response || error);
-        alert("Erro ao excluir a manutenção.");
-      }
+    try {
+      await api.delete(`/manutencoes/${idManutencao}`);
+      setManutencoes((prev) =>
+        prev.filter((item) => item.idHistoricoManutencoes !== idManutencao)
+      );
+      alert("Manutenção excluída com sucesso!");
+    } catch (error) {
+      console.error("Erro ao excluir manutenção:", error.response || error);
+      alert("Erro ao excluir a manutenção.");
+    }
   };
   
-  // --- FUNÇÕES DE EXPORTAÇÃO ---
-
   const handleExportCSV = () => {
     if (filtrados.length === 0) {
       alert("Não há dados para exportar.");
@@ -109,7 +99,7 @@ export default function Movimentacoes() {
     }
 
     const headers = [
-      "ID", "Data", "Tipo", "ID Máquina", "Responsável", "Procedimento",
+      "ID", "Data", "Tipo", "ID Máquina", "Responsável", "Procedimento", "Custo",
     ];
     const csvRows = [headers.join(",")];
 
@@ -121,6 +111,7 @@ export default function Movimentacoes() {
         mov.idMaquina?.idMaquina || "-",
         mov.idFuncionario?.nomeFuncionario || "-",
         mov.procedimentos || "-",
+        mov.custoManutencao ? mov.custoManutencao.toFixed(2) + " R$" : "-",
       ];
       csvRows.push(
         row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(",")
@@ -130,7 +121,7 @@ export default function Movimentacoes() {
     const csvData = new Blob(["\uFEFF" + csvRows.join("\n")], {
       type: "text/csv;charset=utf-8;",
     });
-    const url = window.URL.createObjectURL(csvData);
+        const url = window.URL.createObjectURL(csvData);
     const link = document.createElement("a");
     link.href = url;
     link.download = "historico_manutencoes.csv";
@@ -145,7 +136,7 @@ export default function Movimentacoes() {
     try {
       const doc = new jsPDF();
       const tableColumn = [
-        "ID", "Data", "Tipo", "ID Máquina", "Responsável", "Procedimento",
+        "ID", "Data", "Tipo", "ID Máquina", "Responsável", "Procedimento", "Custo",
       ];
       const tableRows = [];
 
@@ -157,6 +148,7 @@ export default function Movimentacoes() {
           mov.idMaquina?.idMaquina || "-",
           mov.idFuncionario?.nomeFuncionario || "-",
           mov.procedimentos || "-",
+          mov.custoManutencao ? mov.custoManutencao.toFixed(2) + " R$" : "-", // Incluindo custo
         ];
         tableRows.push(manutencaoData);
       });
@@ -170,12 +162,11 @@ export default function Movimentacoes() {
           doc.text("Relatório de Manutenções", data.settings.margin.left, 15);
         },
         columnStyles: {
-          5: { cellWidth: 'wrap' } 
+          6: { cellWidth: 'wrap' }  // Ajusta a largura da coluna do custo
         }
       });
       doc.save("relatorio_manutencoes.pdf");
-    } catch (error)
- {
+    } catch (error) {
       console.error("Falha ao gerar o PDF:", error);
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
@@ -235,7 +226,7 @@ export default function Movimentacoes() {
           className="border rounded px-3 py-2 text-sm w-full md:w-auto"
           value={filtro.data}
           onChange={(e) => setFiltro({ ...filtro, data: e.target.value })}
-        />
+                />
         <input
           type="text"
           placeholder="Filtrar por Tipo"
@@ -292,64 +283,38 @@ export default function Movimentacoes() {
                 <th className="px-4 py-2 border text-left">Tipo</th>
                 <th className="px-4 py-2 border text-left">ID Máquina</th>
                 <th className="px-4 py-2 border text-left">Responsável</th>
-                <th className="px-4 py-2 border text-left">Procedimento</th>
-                <th className="px-4 py-2 border text-center">Ações</th> {/* 💡 Nova Coluna */}
+                <th className="px-4 py-2 border text-left">Procedimentoaaaa</th>
+                <th className="px-4 py-2 border text-left">Custo</th> {/* Nova coluna */}
+                <th className="px-4 py-2 border text-center">Ações</th> {/* Botões de Ação */}
               </tr>
             </thead>
             <tbody>
               {filtrados.map((mov) => (
-                <tr
-                  key={mov.idHistoricoManutencoes}
-                  className="hover:bg-gray-50 text-sm"
-                >
-                  <td className="border px-4 py-2">
-                    {mov.idHistoricoManutencoes}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {new Date(mov.data).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {mov.tipoManutencao || "-"}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {mov.idMaquina?.idMaquina || "-"}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {mov.idFuncionario?.nomeFuncionario || "-"}
-                  </td>
-                  <td
-                    className="border px-4 py-2 max-w-xs truncate"
-                    title={mov.procedimentos}
-                  >
+                <tr key={mov.idHistoricoManutencoes} className="hover:bg-gray-50 text-sm">
+                  <td className="border px-4 py-2">{mov.idHistoricoManutencoes}</td>
+                  <td className="border px-4 py-2">{new Date(mov.data).toLocaleDateString("pt-BR")}</td>
+                  <td className="border px-4 py-2">{mov.tipoManutencao || "-"}</td>
+                  <td className="border px-4 py-2">{mov.idMaquina?.idMaquina || "-"}</td>
+                  <td className="border px-4 py-2">{mov.idFuncionario?.nomeFuncionario || "-"}</td>
+                  <td className="border px-4 py-2 max-w-xs truncate" title={mov.procedimentos}>
                     {mov.procedimentos || "-"}
                   </td>
-                  {/* 💡 Botões de Ação na Tabela */}
+                  <td className="border px-4 py-2">
+                    {mov.custoManutencao ? mov.custoManutencao.toFixed(2) + " R$" : "-"}
+                  </td> {/* Campo de custo */}
                   <td className="border px-4 py-2 text-center space-x-2">
-                    <button
-                      onClick={() => handleEditar(mov.idHistoricoManutencoes)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleExcluir(mov.idHistoricoManutencoes)}
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md"
-                    >
-                      Excluir
-                    </button>
+                    <button onClick={() => handleEditar(mov.idHistoricoManutencoes)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md">Editar</button>
+                    <button onClick={() => handleExcluir(mov.idHistoricoManutencoes)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md">Excluir</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {/* Cards Mobile */}
+                    {/* Cards Mobile */}
           <div className="md:hidden space-y-4">
             {filtrados.map((mov) => (
-              <div
-                key={mov.idHistoricoManutencoes}
-                className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm"
-              >
+              <div key={mov.idHistoricoManutencoes} className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
                 <div className="flex justify-between mb-2 pb-2 border-b">
                   <span className="font-semibold text-gray-700">ID:</span>
                   <span className="font-bold">{mov.idHistoricoManutencoes}</span>
@@ -370,26 +335,17 @@ export default function Movimentacoes() {
                   <span>Responsável:</span>
                   <span>{mov.idFuncionario?.nomeFuncionario || "-"}</span>
                 </div>
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Custo:</span>
+                  <span>{mov.custoManutencao ? mov.custoManutencao.toFixed(2) + " R$" : "-"}</span>
+                </div>
                 <div className="text-sm text-gray-600 mt-2 pt-2 border-t">
                   <span className="font-semibold">Procedimentos:</span>
-                  <p className="text-xs mt-1 break-words">
-                    {mov.procedimentos || "-"}
-                  </p>
+                  <p className="text-xs mt-1 break-words">{mov.procedimentos || "-"}</p>
                 </div>
-                {/* 💡 Botões de Ação no Mobile */}
                 <div className="flex justify-end mt-3 gap-2">
-                    <button
-                        onClick={() => handleEditar(mov.idHistoricoManutencoes)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm"
-                    >
-                        Editar
-                    </button>
-                    <button
-                        onClick={() => handleExcluir(mov.idHistoricoManutencoes)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
-                    >
-                        Excluir
-                    </button>
+                  <button onClick={() => handleEditar(mov.idHistoricoManutencoes)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm">Editar</button>
+                  <button onClick={() => handleExcluir(mov.idHistoricoManutencoes)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm">Excluir</button>
                 </div>
               </div>
             ))}

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// 💡 Importa a instância do Axios configurada
 import api from "../api"; 
 
 export default function Login() {
@@ -14,7 +13,6 @@ export default function Login() {
     setError("");
 
     try {
-      // 💡 Usa a instância 'api'
       const response = await api.post("/auth/login", {
         login,
         senha,
@@ -32,21 +30,29 @@ export default function Login() {
             localStorage.setItem("loginUsuario", login); 
         }
 
-        // Redireciona para a página principal
         navigate("/");
       } else {
         setError("Erro: O servidor não retornou o token de acesso.");
       }
     } catch (err) {
       console.error("Erro na requisição de login:", err);
-      // Trata erros 401/403 de forma específica se necessário
       setError("Usuário ou senha incorretos. Verifique suas credenciais.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      
+      <div className="text-center mb-8">
+          <h1 className="text-5xl font-extrabold text-gray-900 flex items-center justify-center gap-3">
+              <span>💻</span> 
+              <span><bold>MAGE</bold></span>
+          </h1>
+          <p className="text-gray-600 text-lg mt-2">Máquinas e Gerenciamento Empresarial</p>
+      </div>
+
+      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
+        
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           Entrar na conta
         </h2>

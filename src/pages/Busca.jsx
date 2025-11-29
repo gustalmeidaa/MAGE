@@ -19,6 +19,7 @@ export default function Busca() {
     localizacao: "",
     status: "",
     idSetor: "",
+    nomeResponsavel: "",
   });
 
   useEffect(() => {
@@ -51,15 +52,20 @@ export default function Busca() {
   };
 
   const funcionarioSetorMap = {};
+  const funcionarioNomeMap = {};
+  
   funcionarios.forEach(f => {
     if (f.idFuncionario) {
       funcionarioSetorMap[f.idFuncionario] = f.setor?.idSetor;
+      funcionarioNomeMap[f.idFuncionario] = f.nomeFuncionario;
     }
   });
 
 
   const filtrados = maquinas.filter(
     (m) => {
+      const responsavelNome = funcionarioNomeMap[m.idResponsavel] || '';
+      
       const baseFilter = (m.codPatrimonial || "")
         .toLowerCase()
         .includes(filtro.codPatrimonial.toLowerCase()) &&
@@ -67,17 +73,16 @@ export default function Busca() {
         (m.localizacao || "")
           .toLowerCase()
           .includes(filtro.localizacao.toLowerCase()) &&
-        (m.status || "").toLowerCase().includes(filtro.status.toLowerCase());
+        (m.status || "").toLowerCase().includes(filtro.status.toLowerCase()) &&
+        
+        (responsavelNome.toLowerCase().includes(filtro.nomeResponsavel.toLowerCase()));
 
       if (!baseFilter) return false;
 
       if (filtro.idSetor) {
         const maquinaResponsavelId = m.idResponsavel;
-        
         if (!maquinaResponsavelId) return false;
-
         const responsavelSetorId = funcionarioSetorMap[maquinaResponsavelId];
-
         return responsavelSetorId?.toString() === filtro.idSetor;
       }
 
@@ -98,20 +103,22 @@ export default function Busca() {
       alert("Nenhum dado para exportar.");
       return;
     }
+    // 💡 CABEÇALHOS CSV CORRIGIDOS
     const headers = [
-      "Cód. Patrimonial", "Nº de Série", "Localização", "Valor (R$)",
-      "Status", "ID Responsável", "Setor Responsável",
+      "Cód. Patrimonial", "Nº de Série", "Localização", "Responsável", "Setor", "Status", "Valor (R$)",
     ];
     const csvRows = [headers.join(",")];
 
     filtrados.forEach((m) => {
       const responsavelSetorId = funcionarioSetorMap[m.idResponsavel];
       const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
+      const responsavelNome = funcionarioNomeMap[m.idResponsavel] || 'N/A';
 
+      // 💡 ORDEM DOS DADOS CORRIGIDA
       const row = [
-        m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-",
+        m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-", 
+        responsavelNome, setorNome, m.status || "-", 
         m.valor?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(".", "") || "0,00",
-        m.status || "-", m.idResponsavel || "N/A", setorNome,
       ];
       csvRows.push(row.map((val) => `"${val}"`).join(","));
     });
@@ -133,20 +140,22 @@ export default function Busca() {
     }
     try {
       const doc = new jsPDF("landscape");
+      // 💡 CABEÇALHOS PDF CORRIGIDOS
       const tableColumn = [
-        "Cód. Patrimonial", "Nº de Série", "Localização", "Valor (R$)",
-        "Status", "ID Responsável", "Setor Responsável",
+        "Cód. Patrimonial", "Nº de Série", "Localização", "Status", "Responsável", "Setor", "Valor (R$)",
       ];
       const tableRows = [];
 
       filtrados.forEach((m) => {
         const responsavelSetorId = funcionarioSetorMap[m.idResponsavel];
         const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
+        const responsavelNome = funcionarioNomeMap[m.idResponsavel] || 'N/A';
         
+        // 💡 ORDEM DOS DADOS CORRIGIDA
         const maquinaData = [
-          m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-",
+          m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-", m.status || "-",
+          responsavelNome, setorNome,
           m.valor?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "R$ 0,00",
-          m.status || "-", m.idResponsavel || "N/A", setorNome,
         ];
         tableRows.push(maquinaData);
       });
@@ -166,7 +175,7 @@ export default function Busca() {
       alert("Ocorreu um erro ao tentar gerar o PDF.");
     }
   };
-  
+
   const handleVolta = () => {
     navigate(-1);
   };
@@ -177,25 +186,27 @@ export default function Busca() {
   return (
     <div className="p-6">
       {/* CABEÇALHO FINAL */}
-      <div className="flex items-center justify-between mb-6 relative">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 relative">
         
         {/* LADO ESQUERDO: Botão Voltar */}
-        <button
-          onClick={handleVolta}
-          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-20 relative"
-        >
-          &#8592; Voltar
-        </button>
+        <div className="flex-shrink-0 mb-4 md:mb-0 z-20">
+          <button
+            onClick={handleVolta}
+            className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-20 relative"
+          >
+            &#8592; Voltar
+          </button>
+        </div>
         
         {/* CENTRO: Título */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center z-0">
-            <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">
+        <div className="absolute top-0 left-0 right-0 md:relative md:flex-grow md:text-center z-0">
+            <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap text-center pt-10 md:pt-0">
                 Lista de Máquinas
             </h2>
         </div>
         
         {/* LADO DIREITO: Botões de Ação */}
-        <div className="flex flex-wrap gap-3 z-20 relative">
+        <div className="flex flex-wrap justify-end gap-3 w-full md:w-auto md:ml-auto z-20 relative">
           <Link to="/cadastrar-maquina">
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md transition">
               + Cadastrar Máquina
@@ -256,6 +267,14 @@ export default function Busca() {
             </option>
           ))}
         </select>
+        
+        <input
+          type="text"
+          placeholder="Filtrar por Responsável"
+          className="border rounded px-3 py-2 text-sm w-full md:w-auto"
+          value={filtro.nomeResponsavel}
+          onChange={(e) => setFiltro({ ...filtro, nomeResponsavel: e.target.value })}
+        />
 
         <input
           type="text"
@@ -273,6 +292,7 @@ export default function Busca() {
               localizacao: "",
               status: "",
               idSetor: "",
+              nomeResponsavel: "",
             })
           }
           className="border rounded px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 w-full md:w-auto"
@@ -295,8 +315,9 @@ export default function Busca() {
                 <th className="px-4 py-2 border text-left">Cód. Patrimonial</th>
                 <th className="px-4 py-2 border text-left">Nº de Série</th>
                 <th className="px-4 py-2 border text-left">Localização</th>
-                <th className="px-4 py-2 border text-left">Status</th>
+                <th className="px-4 py-2 border text-left">Responsável</th>
                 <th className="px-4 py-2 border text-left">Setor</th>
+                <th className="px-4 py-2 border text-left">Status</th>
                 <th className="px-4 py-2 border text-left">Valor (R$)</th>
                 <th className="px-4 py-2 border text-center">Ações</th>
               </tr>
@@ -305,6 +326,7 @@ export default function Busca() {
               {filtrados.map((m) => {
                 const responsavelSetorId = funcionarioSetorMap[m.idResponsavel];
                 const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
+                const responsavelNome = funcionarioNomeMap[m.idResponsavel] || 'N/A';
 
                 return (
                   <tr
@@ -314,8 +336,9 @@ export default function Busca() {
                     <td className="border px-4 py-2">{m.codPatrimonial || "-"}</td>
                     <td className="border px-4 py-2">{m.numSerie || "-"}</td>
                     <td className="border px-4 py-2">{m.localizacao || "-"}</td>
-                    <td className="border px-4 py-2">{m.status || "-"}</td>
+                    <td className="border px-4 py-2">{responsavelNome}</td>
                     <td className="border px-4 py-2">{setorNome}</td>
+                    <td className="border px-4 py-2">{m.status || "-"}</td>
                     <td className="border px-4 py-2">
                       {m.valor?.toLocaleString("pt-BR", {
                         style: "currency",
@@ -341,6 +364,7 @@ export default function Busca() {
             {filtrados.map((m) => {
               const responsavelSetorId = funcionarioSetorMap[m.idResponsavel];
               const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
+              const responsavelNome = funcionarioNomeMap[m.idResponsavel] || 'N/A';
               
               return (
                 <div
@@ -366,12 +390,14 @@ export default function Busca() {
                     <span className="font-semibold">Local:</span> {m.localizacao || "-"}
                   </p>
                   <p className="text-sm">
+                    <span className="font-semibold">Responsável:</span> {responsavelNome}
+                  </p>
+                  <p className="text-sm">
                     <span className="font-semibold">Setor:</span> {setorNome}
                   </p>
                   <div className="flex justify-between items-center border-t pt-2 mt-2">
                     <span className="text-sm">
-                      <span className="font-semibold">Responsável ID:</span>{" "}
-                      {m.idResponsavel || "N/A"}
+                      <span className="font-semibold">Status:</span> {m.status || "-"}
                     </span>
                     <span className="font-bold text-gray-700">
                       {m.valor?.toLocaleString("pt-BR", {

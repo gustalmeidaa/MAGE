@@ -20,6 +20,7 @@ export default function Busca() {
     status: "",
     idSetor: "",
     nomeResponsavel: "",
+    descricao: "", // 💡 NOVO CAMPO DE FILTRO
   });
 
   useEffect(() => {
@@ -74,6 +75,8 @@ export default function Busca() {
           .toLowerCase()
           .includes(filtro.localizacao.toLowerCase()) &&
         (m.status || "").toLowerCase().includes(filtro.status.toLowerCase()) &&
+        // 💡 FILTRO POR DESCRIÇÃO
+        (m.descricao || "").toLowerCase().includes(filtro.descricao.toLowerCase()) &&
         
         (responsavelNome.toLowerCase().includes(filtro.nomeResponsavel.toLowerCase()));
 
@@ -103,9 +106,9 @@ export default function Busca() {
       alert("Nenhum dado para exportar.");
       return;
     }
-    // 💡 CABEÇALHOS CSV CORRIGIDOS
+    // 💡 CABEÇALHOS CSV ATUALIZADOS
     const headers = [
-      "Cód. Patrimonial", "Nº de Série", "Localização", "Responsável", "Setor", "Status", "Valor (R$)",
+      "Cód. Patrimonial", "Nº de Série", "Localização", "Status", "Responsável", "Setor", "Descrição", "Valor (R$)",
     ];
     const csvRows = [headers.join(",")];
 
@@ -114,10 +117,10 @@ export default function Busca() {
       const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
       const responsavelNome = funcionarioNomeMap[m.idResponsavel] || 'N/A';
 
-      // 💡 ORDEM DOS DADOS CORRIGIDA
+      // 💡 ORDEM DOS DADOS ATUALIZADA
       const row = [
-        m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-", 
-        responsavelNome, setorNome, m.status || "-", 
+        m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-", m.status || "-", 
+        responsavelNome, setorNome, m.descricao || "-",
         m.valor?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(".", "") || "0,00",
       ];
       csvRows.push(row.map((val) => `"${val}"`).join(","));
@@ -140,9 +143,9 @@ export default function Busca() {
     }
     try {
       const doc = new jsPDF("landscape");
-      // 💡 CABEÇALHOS PDF CORRIGIDOS
+      // 💡 CABEÇALHOS PDF ATUALIZADOS
       const tableColumn = [
-        "Cód. Patrimonial", "Nº de Série", "Localização", "Status", "Responsável", "Setor", "Valor (R$)",
+        "Cód. Patrimonial", "Nº de Série", "Localização", "Status", "Responsável", "Setor", "Descrição", "Valor (R$)",
       ];
       const tableRows = [];
 
@@ -151,10 +154,10 @@ export default function Busca() {
         const setorNome = setores.find(s => s.idSetor === responsavelSetorId)?.nomeSetor || 'N/A';
         const responsavelNome = funcionarioNomeMap[m.idResponsavel] || 'N/A';
         
-        // 💡 ORDEM DOS DADOS CORRIGIDA
+        // 💡 ORDEM DOS DADOS ATUALIZADA
         const maquinaData = [
           m.codPatrimonial || "-", m.numSerie || "-", m.localizacao || "-", m.status || "-",
-          responsavelNome, setorNome,
+          responsavelNome, setorNome, m.descricao || "-",
           m.valor?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "R$ 0,00",
         ];
         tableRows.push(maquinaData);
@@ -168,6 +171,10 @@ export default function Busca() {
           doc.setFontSize(18);
           doc.text("Relatório de Máquinas", data.settings.margin.left, 15);
         },
+        // Estilo para que a descrição possa quebrar linha no PDF
+        columnStyles: {
+            6: { cellWidth: 30 } 
+        }
       });
       doc.save("relatorio_maquinas.pdf");
     } catch (error) {
@@ -275,6 +282,15 @@ export default function Busca() {
           value={filtro.nomeResponsavel}
           onChange={(e) => setFiltro({ ...filtro, nomeResponsavel: e.target.value })}
         />
+        
+        <input
+          type="text"
+          placeholder="Filtrar por Descrição"
+          className="border rounded px-3 py-2 text-sm w-full md:w-auto"
+          value={filtro.descricao}
+          onChange={(e) => setFiltro({ ...filtro, descricao: e.target.value })}
+        />
+
 
         <input
           type="text"
@@ -293,6 +309,7 @@ export default function Busca() {
               status: "",
               idSetor: "",
               nomeResponsavel: "",
+              descricao: "",
             })
           }
           className="border rounded px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 w-full md:w-auto"
@@ -318,6 +335,7 @@ export default function Busca() {
                 <th className="px-4 py-2 border text-left">Responsável</th>
                 <th className="px-4 py-2 border text-left">Setor</th>
                 <th className="px-4 py-2 border text-left">Status</th>
+                <th className="px-4 py-2 border text-left">Descrição</th> {/* 💡 NOVA COLUNA */}
                 <th className="px-4 py-2 border text-left">Valor (R$)</th>
                 <th className="px-4 py-2 border text-center">Ações</th>
               </tr>
@@ -339,6 +357,7 @@ export default function Busca() {
                     <td className="border px-4 py-2">{responsavelNome}</td>
                     <td className="border px-4 py-2">{setorNome}</td>
                     <td className="border px-4 py-2">{m.status || "-"}</td>
+                    <td className="border px-4 py-2 max-w-xs truncate" title={m.descricao}>{m.descricao || "-"}</td> {/* 💡 NOVO CAMPO */}
                     <td className="border px-4 py-2">
                       {m.valor?.toLocaleString("pt-BR", {
                         style: "currency",
@@ -394,6 +413,9 @@ export default function Busca() {
                   </p>
                   <p className="text-sm">
                     <span className="font-semibold">Setor:</span> {setorNome}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-semibold">Descrição:</span> {m.descricao || "-"} {/* 💡 NOVO CAMPO */}
                   </p>
                   <div className="flex justify-between items-center border-t pt-2 mt-2">
                     <span className="text-sm">

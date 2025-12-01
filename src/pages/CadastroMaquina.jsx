@@ -20,6 +20,7 @@ export default function CadastroMaquina() {
     idResponsavel: "",
     localizacao: "",
     status: "ATIVA", 
+    descricao: "", // O campo está aqui
   });
 
   useEffect(() => {
@@ -48,7 +49,8 @@ export default function CadastroMaquina() {
           localizacao: dadosMaquina.localizacao || "",
           status: dadosMaquina.status || "ATIVA",
           valor: valorFormatado, 
-          idResponsavel: dadosMaquina.idResponsavel?.toString() || "", 
+          idResponsavel: dadosMaquina.idResponsavel?.toString() || "",
+          descricao: dadosMaquina.descricao || "", // 💡 DADOS DA DESCRIÇÃO PUXADOS
         });
       }
       
@@ -94,17 +96,15 @@ export default function CadastroMaquina() {
     
     try {
       if (idMaquina) {
-        // MODO EDIÇÃO (PUT)
         await api.put(`/maquinas/${idMaquina}`, payload); 
         setSucesso("Máquina atualizada com sucesso!");
       } else {
-        // MODO CADASTRO (POST)
         await api.post("/maquinas", payload);
         setSucesso("Máquina cadastrada com sucesso!");
         
         setFormData({
           codPatrimonial: "", numSerie: "", valor: "0.00", idResponsavel: "",
-          localizacao: "", status: "ATIVA",
+          localizacao: "", status: "ATIVA", descricao: "",
         });
       }
 
@@ -121,7 +121,6 @@ export default function CadastroMaquina() {
     return <p className="p-6 text-gray-600">Carregando dados...</p>;
   }
 
-  // Função para voltar à página anterior no histórico
   const handleVolta = () => {
     navigate(-1);
   };
@@ -129,17 +128,22 @@ export default function CadastroMaquina() {
 
   return (
     <>
-    {/* 💡 BOTÃO VOLTAR */}
+      <div className="flex items-center justify-start mb-6 relative">
+        
         <button
           onClick={handleVolta}
-          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2"
+          className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition duration-150 flex items-center gap-2 z-10"
         >
-          {/* Unicode para Seta Esquerda */}
           &#8592; Voltar
         </button>
-      <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-10">
-        {idMaquina ? "Editar Máquina" : "Cadastrar Máquina"}
-      </h1>
+        
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full text-center z-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">
+              {idMaquina ? "Editar Máquina" : "Cadastrar Máquina"}
+            </h1>
+        </div>
+        
+      </div>
 
       {sucesso && (
         <div className="max-w-md mx-auto mb-8 p-4 bg-green-100 border border-green-400 rounded-lg text-green-700 shadow-md animate-fade-in">
@@ -252,6 +256,20 @@ export default function CadastroMaquina() {
             <option value="EM_MANUTENCAO">EM MANUTENÇÃO</option>
           </select>
         </div>
+        
+        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <label className="font-semibold pt-2" htmlFor="descricao">Descrição da máquina:</label>
+          <textarea
+            id="descricao"
+            name="descricao"
+            className="bg-gray-200 rounded w-full md:w-72 resize-none px-4 py-2"
+            placeholder="Detalhes sobre a máquina..."
+            rows="3"
+            value={formData.descricao}
+            onChange={handleChange}
+          ></textarea>
+        </div>
+
 
         <div className="flex justify-center pt-4">
           <button

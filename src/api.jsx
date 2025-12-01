@@ -3,8 +3,10 @@ import axios from "axios";
 import { getToken, logout } from "./auth"; 
 import { redirect } from "react-router-dom"; 
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const api = axios.create({
-  baseURL: "http://localhost:8080", 
+  baseURL: BASE_URL, 
 });
 
 api.interceptors.request.use(
